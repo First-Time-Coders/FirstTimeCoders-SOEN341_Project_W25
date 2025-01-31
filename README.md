@@ -17,6 +17,9 @@ This project aims to create a platform to ease communications between users.
 * Zineb Bamouh
 * Ileass Bouhout
 
+* Set-ExecutionPolicy Unrestricted -Scope Process
+
+
 
 
 
