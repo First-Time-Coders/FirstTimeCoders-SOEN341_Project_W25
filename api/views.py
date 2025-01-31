@@ -13,6 +13,8 @@ def register_view(request):
         form = registerform()
     return render(request, 'api/register.html/', {'form': form})
 
+#blablabla
+
 def login_view(request):
     if request.method == 'POST':
         username = request.POST.get('username')
