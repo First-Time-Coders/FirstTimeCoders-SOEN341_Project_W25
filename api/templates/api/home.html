@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - My Django App</title>
+    <link rel="stylesheet" href="/css/styles.css">  <!-- Optional CSS -->
+</head>
+<body>
+    <h1>Welcome to My Django App</h1>
+    <p>This is the homepage. Click below to log in.</p>
+
+    <a href="{% url 'login' %}">
+        <button>Login</button>
+    </a>
+
+    <p>Or click below to register.</p>
+    <a href="{% url 'register' %}">
+        <button>Register</button>
+    </a>
+</body>
+</html>
