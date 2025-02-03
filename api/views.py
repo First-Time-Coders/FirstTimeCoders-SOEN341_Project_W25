@@ -9,7 +9,7 @@ import os
 
 # Load Supabase credentials
 SUPABASE_URL = "https://rsdvkupcprtchpzuxgtd.supabase.co"
-SUPABASE_KEY = "yeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzZHZrdXBjcHJ0Y2hwenV4Z3RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwODEyNDIsImV4cCI6MjA1MzY1NzI0Mn0.9SQn2rXp4j6p8Em_FVhEHukZdzpYqV4lF5T8PT_gVAc"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzZHZrdXBjcHJ0Y2hwenV4Z3RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwODEyNDIsImV4cCI6MjA1MzY1NzI0Mn0.9SQn2rXp4j6p8Em_FVhEHukZdzpYqV4lF5T8PT_gVAc"
 
 # Initialize Supabase client
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -26,13 +26,20 @@ def register_view(request):
 
 def login_view(request):
     if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
-            login(request, user)
-            return redirect('home')
-    return render(request, 'api/login.html')
+        email = request.POST["username"]
+        password = request.POST["password"]
+
+        # Authenticate with Supabase
+        response = supabase.auth.sign_in_with_password({"email": email, "password": password})
+
+        if response:
+            print(f"Successful Login")
+            return redirect('home')  # Redirect to home (for now, just to see if login works)
+        else:
+            print(f"Failed login attempt")
+            return redirect('login')
+
+    return render(request, "api/login.html")
 
 def logout_view(request):
     logout(request)
