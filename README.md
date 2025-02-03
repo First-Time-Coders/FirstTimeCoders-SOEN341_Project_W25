@@ -8,7 +8,7 @@
 
 ## <a name="pd"></a>Project Description
 
-This project aims to create a platform to ease communications between users. 
+This project aims to create a modern platform to ease communications between users called ChatHaven. Whether you're collaborating with a team, engaging with a community, or having private conversations with friends, ChatHaven provides an intuitive and organized space to stay connected. The application enable users can create topic-specific channels, share media, and enjoy real-time messaging with a clean and customizable interface.
 
 ## <a name="team"></a>Team Members and Roles
 * Mohammed Safouane Maghni
