@@ -77,11 +77,11 @@ WSGI_APPLICATION = 'DjangoProject2.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',  # Supabase default DB name
-        'USER': 'postgres',  # Find this in Supabase dashboard
-        'PASSWORD': 'SOEN341FTC',  # Use the password you set
-        'HOST': 'db.iyrlvlyrrxryrnbcrgao.supabase.co',  # Copy the database URL (without `https://`)
-        'PORT': '5432',  # Default PostgreSQL port
+        #'NAME': 'postgres',  # Supabase default DB name
+        #'USER': 'postgres',  # Find this in Supabase dashboard
+        #'PASSWORD': 'SOEN341FTC',  # Use the password you set
+        #'HOST': 'db.iyrlvlyrrxryrnbcrgao.supabase.co',  # Copy the database URL (without `https://`)
+        #'PORT': '5432',  # Default PostgreSQL port
     }
 }
 
