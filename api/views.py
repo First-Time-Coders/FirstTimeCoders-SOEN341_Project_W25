@@ -1,4 +1,4 @@
-import password
+import bcrypt
 from django.conf import settings
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
@@ -22,15 +22,32 @@ def register_view(request):
         email = request.POST.get('email')
         username = request.POST.get('username')
         password = request.POST.get('password')
+        first_name = request.POST.get('first_name')
+        last_name = request.POST.get('last_name')
+        gender = request.POST.get('gender')
 
         if not email or not password:
             return JsonResponse({"error": "Missing email or password"}, status=400)
 
         # Send registration request to Supabase
-        response = supabase_client.auth.sign_up({username: "username", "email": email, "password": password})
+        response = supabase_client.auth.sign_up({"email": email, "password": password})
 
         if "error" in response:
             return JsonResponse({"error": response["error"]["message"]}, status=400)
+
+        salt = bcrypt.gensalt()
+        hashed = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8') #hash password
+
+        db_response = (supabase_client.table('users').insert(
+            {"email": email,
+              "username": username,
+              "first name": first_name,
+              "last name": last_name,
+              "password": hashed,
+              "gender": gender}).execute())
+
+        if "error" in db_response and db_response["error"]:
+            return JsonResponse({"error": db_response["error"]["message"]}, status=400)
 
         return redirect('login')
 
@@ -45,7 +62,7 @@ def login_view(request):
         response = supabase_client.auth.sign_in_with_password({"email": email, "password": password})
 
         if response:
-            #request.session['user'] = response.user.id  # Store user session
+            request.session['user'] = response.user.id  # Store user session
             return redirect('dashboard')  # Redirect to dashboard
         else:
             return render(request, "api/login.html", {"error": "Invalid credentials."})
