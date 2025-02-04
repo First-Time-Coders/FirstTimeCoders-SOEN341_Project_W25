@@ -1,8 +1,11 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
+from gotrue.errors import AuthApiError
+
 from .forms import registerform
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
+from django.contrib import messages
 from supabase import create_client
 
 import os
@@ -29,14 +32,19 @@ def login_view(request):
         email = request.POST["username"]
         password = request.POST["password"]
 
-        # Authenticate with Supabase
-        response = supabase.auth.sign_in_with_password({"email": email, "password": password})
+        try:
+            # Authenticate with Supabase
+            response = supabase.auth.sign_in_with_password({"email": email, "password": password})
 
-        if response:
-            print(f"Successful Login")
-            return redirect('home')  # Redirect to home (for now, just to see if login works)
-        else:
-            print(f"Failed login attempt")
+            if response:
+                messages.success(request, "Successful login")
+                return redirect('login')  # Redirect to login with success message (for now, just to see if login works)
+            else:
+                messages.error(request, "Failed login attempt")
+                return redirect('login')
+
+        except AuthApiError as e:
+            messages.error(request, "Failed login attempt")
             return redirect('login')
 
     return render(request, "api/login.html")
