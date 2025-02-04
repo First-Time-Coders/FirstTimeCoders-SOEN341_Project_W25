@@ -22,6 +22,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-+x@=y_2lxnnr%8qft-=%agylsua1bi)b=wsvt_-7i6r@_2*rti'
 
+SUPABASE_URL = "https://rsdvkupcprtchpzuxgtd.supabase.co"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzZHZrdXBjcHJ0Y2hwenV4Z3RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwODEyNDIsImV4cCI6MjA1MzY1NzI0Mn0.9SQn2rXp4j6p8Em_FVhEHukZdzpYqV4lF5T8PT_gVAc"
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -76,7 +79,9 @@ WSGI_APPLICATION = 'DjangoProject2.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / "db.sqlite3",  # Keeps a small local database
+        #'ENGINE': 'django.db.backends.postgresql',
         #'NAME': 'postgres',  # Supabase default DB name
         #'USER': 'postgres',  # Find this in Supabase dashboard
         #'PASSWORD': 'SOEN341FTC',  # Use the password you set
@@ -84,6 +89,7 @@ DATABASES = {
         #'PORT': '5432',  # Default PostgreSQL port
     }
 }
+
 
 
 # Password validation
