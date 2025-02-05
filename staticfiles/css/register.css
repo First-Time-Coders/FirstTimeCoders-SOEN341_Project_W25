@@ -29,14 +29,14 @@ body {
 .header h1 {
     margin: 0;
     font-size: 48px;
-    color: #9F0E31;
+    color: #C31F48;
     font-weight: bolder;
 }
 
 .header p {
     margin: 5px 0;
     font-size: 28px;
-    color: #2D2B2A;
+    color: #1A1423;
 }
 
 .container {
@@ -69,8 +69,8 @@ body {
 
 .register-box h1 {
     margin: 0 0 10px 0;
-    font-size: 38px;
-    color: #2D2B2A;}
+    font-size: 28px;
+    color: #1A1423;}
 
 .register-box p {
     margin: 0 0 20px 0;
@@ -102,11 +102,11 @@ input, select, button {
 }
 
 select {
-    color: gray;
+    color: grey;
 }
 
 button {
-    background: #9F0E31;
+    background: #C31F48;
     color: #FDF9F9;
     border: none;
     cursor: pointer;
@@ -115,17 +115,17 @@ button {
 }
 
 button:hover {
-    background: #810725;
+    background: #301D40;
 }
 
 a {
-    color: #9F0E31;
+    color: #5A1E72;
 }
 
 a:visited {
-    color: #9F0E31;
+    color: #5A1E72;
 }
 
 a:hover {
-    color: #810725;
+    color: #301D40;
 }
