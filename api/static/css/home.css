@@ -1,11 +1,12 @@
 body {
     display: flex;
-    justify-content: center;
-    align-items: center;
+
+    align-items: flex-start; /* Align everything to the left */
+    justify-content: flex-start;
     height: 100vh;
     background: #FDF9F9;
     margin: 0;
-    flex-direction: row;
+    flex-direction: column;
     flex-wrap: wrap;
     padding: 5vh 0;
     font-family: 'Work Sans', sans-serif;
@@ -14,18 +15,20 @@ body {
 }
 
 .globe{
+    top: 5vh;
+    left: 5vw;
+    padding-left: 170px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
 }
 
 .header {
-    position: absolute;
+    /*position: absolute;*/
+    text-align: left;
     top: 5vh;
     left: 5vw;
-    /*flex-direction: row;
-    flex-wrap: wrap;*/
-    margin-left: 70px;
+    margin-bottom: 70px;
     transform: translateY(-0.5vh);
     transition: transform 0.3s ease-in-out;
 }
@@ -47,14 +50,18 @@ body {
 }
 
 .container {
-    display: flex;
-    /*justify-content: flex-start;
-    align-items: center;*/
+    /*display: flex;
+    justify-content: flex-start;
+    align-items: center;
     height: auto;
     padding: 5vh 0;
     gap: 7vw;
-    flex-wrap: wrap;
+    flex-wrap: wrap;*/
 
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    height: auto;
 }
 
 .home-box {
@@ -67,10 +74,10 @@ body {
     box-shadow: 0px 0px 2vw rgb(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
-    flex-wrap: wrap;
+
     text-align: center;
-    margin-top: 25vh;
-    margin-left: 25vh;
+    /*margin-top: 25vh;
+    margin-left: 25vh;*/
     transform: translateY(-0.5vh);
     transition: transform 0.3s ease-in-out;
 }
