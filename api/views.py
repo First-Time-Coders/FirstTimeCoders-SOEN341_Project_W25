@@ -41,6 +41,11 @@ def logout_view(request):
 def home_view(request):
     return render(request, "api/home.html")
 
+#for the dashboard admin
+def dashboard_admin_view(request):
+    return render(request, "api/dashboard-admin.html")
+
+
 @login_required
 def dashboard_view(request):
     return render(request, 'api/dashboard.html', {'user': request.user})
