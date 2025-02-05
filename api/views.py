@@ -37,8 +37,7 @@ def login_view(request):
             response = supabase.auth.sign_in_with_password({"email": email, "password": password})
 
             if response:
-                messages.success(request, "Successful login")
-                return redirect('login')  # Redirect to login with success message (for now, just to see if login works)
+                return redirect('dashboard')  # Redirect to dashboard
             else:
                 messages.error(request, "Failed login attempt")
                 return redirect('login')
@@ -56,7 +55,7 @@ def logout_view(request):
 def home_view(request):
     return render(request, "api/home.html")
 
-@login_required
+#@login_required
 def dashboard_view(request):
     return render(request, 'api/dashboard.html', {'user': request.user})
 
