@@ -1,0 +1,131 @@
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background: #FDF9F9;
+    margin: 0;
+    flex-direction: column;
+    padding: 5vh 0;
+    font-family: 'Work Sans', sans-serif;
+    min-height: 100vh;
+
+}
+
+.header {
+    position: absolute;
+    top: 5vh;
+    left: 5vw;
+    flex-direction: column;
+    margin-left: 70px;
+    transform: translateY(-0.5vh);
+    transition: transform 0.3s ease-in-out;
+}
+
+.header:hover {
+    transform: translateY(-1vh);
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 48px;
+    color: #5A1E72;
+    font-weight: bolder;
+}
+
+.header p {
+    margin: 5px 0;
+    font-size: 28px;
+    color: #1A1423;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: auto;
+    padding: 5vh 0;
+    gap: 7vw;
+    flex-wrap: wrap;
+
+}
+
+.register-box {
+    background: #FDF9F9;
+    padding: 3vw;
+    width: 25vw;
+    height: auto;
+    position: relative;
+    border-radius: 1vw;
+    box-shadow: 0px 0px 2vw rgb(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    margin-top: 25vh;
+    margin-left: 25vh;
+    transform: translateY(-0.5vh);
+    transition: transform 0.3s ease-in-out;
+}
+
+.register-box h1 {
+    margin: 0 0 10px 0;
+    font-size: 28px;
+    color: #1A1423;}
+
+.register-box p {
+    margin: 0 0 20px 0;
+    font-size: 16px;
+    color: #1A1423;}
+
+.register-box a {
+    padding-top: 10px;
+}
+
+.register-box:hover {
+    transform: translateY(-1vh);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+
+input, select, button {
+    margin: 1vh 0;
+    padding: 1vh;
+    border-radius: 0.5vw;
+    border: 1px solid #ccc;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+select {
+    color: grey;
+}
+
+button {
+    background: #5A1E72;
+    color: #FDF9F9;
+    border: none;
+    cursor: pointer;
+    font-size: 1.5vw;
+    align-items: center;
+}
+
+button:hover {
+    background: #301D40;
+}
+
+a {
+    color: #5A1E72;
+}
+
+a:visited {
+    color: #5A1E72; /* Same as default link color */
+}
+
+a:hover {
+    color: #301D40; /* Optional: Change color on hover */
+}
