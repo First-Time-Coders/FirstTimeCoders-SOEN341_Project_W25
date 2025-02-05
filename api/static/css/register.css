@@ -29,7 +29,7 @@ body {
 .header h1 {
     margin: 0;
     font-size: 48px;
-    color: #5A1E72;
+    color: #C31F48;
     font-weight: bolder;
 }
 
@@ -106,7 +106,7 @@ select {
 }
 
 button {
-    background: #5A1E72;
+    background: #C31F48;
     color: #FDF9F9;
     border: none;
     cursor: pointer;
@@ -123,9 +123,9 @@ a {
 }
 
 a:visited {
-    color: #5A1E72; /* Same as default link color */
+    color: #5A1E72;
 }
 
 a:hover {
-    color: #301D40; /* Optional: Change color on hover */
+    color: #301D40;
 }
