@@ -12,11 +12,26 @@
 <body>
 <nav id="sidebar">
         <ul>
+            <li>
+                <span class="name-app">ChatHaven</span>
+                <button id="toggle-btn">
+                    <img src="{% static 'icons/arrowleft-icon.svg' %}" alt="SVG Icon">
+                </button>
+            </li>
             <li class="active">
-                <a href="">
+                <button class="dropdown-btn">
                     <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
                     <span>Workspace</span>
-                </a>
+                </button>
+                <ul id="workspace-dropdown" class="sub-workspace">
+                    <li><a href="#"></a>My First Workspace</li>
+                    <li><a href="#"></a>Create a new Workspace</li>
+
+                </ul>
+               <!-- <a href="">
+                    <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
+                    <span>Workspace</span>
+                </a>-->
             </li>
 
             <li class="active">
