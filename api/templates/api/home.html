@@ -1,22 +1,36 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - My Django App</title>
-    <link rel="stylesheet" href="../../static/css/styles.css">  <!-- Optional CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Your place for meaningful connections</title>
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <script src="https://onpkg.com/htmx.org@1.9.5"></script>
 </head>
 <body>
-    <h1>Welcome to My Django App</h1>
-    <p>This is the homepage. Click below to log in.</p>
+    <div class="globe">
+        <div class="header">
+            <h1>Welcome to ChatHeaven!</h1>
+            <p>Your space for meaningful connections</p>
+        </div>
 
-    <a href="{% url 'login' %}">
-        <button>Login</button>
-    </a>
+        <div class="container">
+            <div class="home-box">
+                <div class="home-message">
+                    <h2>ChatHeaven</h2>
+                </div>
 
-    <p>Or click below to register.</p>
-    <a href="{% url 'register' %}">
-        <button>Register</button>
-    </a>
+                <a href="{% url 'login' %}">
+                    <button>Login</button>
+                </a>
+
+                <a href="{% url 'register' %}">
+                    <button>Register Now!</button>
+                </a>
+
+            </div>
+        </div>
+    </div>
 </body>
 </html>
