@@ -1,38 +1,39 @@
-{% load static %}
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load static %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Home Page</title>
-    <link rel="stylesheet" href="{% static 'css/.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <script src="https://onpkg.com/htmx.org@1.9.5"></script>
 </head>
 <body>
+
+<header id="topbar">
+    <div class="top-bar-content">
+        <div class="logo-name">
+            <img src="{% static 'logo/logo.png' %}" style="width: 100px; height: 100px" alt="logo">
+            <span>ChatHaven</span>
+        </div>
+
+    </div>
+</header>
+<div class="page-container">
 <nav id="sidebar">
         <ul>
             <li>
-                <span class="name-app">ChatHaven</span>
+                <span class="name-app" style="font-weight: 600; font-size: 20px">Dashboard</span>
                 <button id="toggle-btn">
                     <img src="{% static 'icons/arrowleft-icon.svg' %}" alt="SVG Icon">
                 </button>
             </li>
-            <li class="active">
-                <button class="dropdown-btn">
-                    <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
-                    <span>Workspace</span>
-                </button>
-                <ul id="workspace-dropdown" class="sub-workspace">
-                    <li><a href="#"></a>My First Workspace</li>
-                    <li><a href="#"></a>Create a new Workspace</li>
 
-                </ul>
                <!-- <a href="">
                     <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
                     <span>Workspace</span>
                 </a>-->
-            </li>
+
 
             <li class="active">
                 <a href="">
@@ -41,31 +42,74 @@
                 </a>
             </li>
 
-            <li class="active">
+            <li>
                 <a href="">
                     <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon">
                     <span>Notification</span>
                 </a>
             </li>
 
-            <li class="active">
+            <li>
                 <a href="">
                     <img src="{% static 'icons/dm-icon.svg' %}" alt="SVG Icon">
                     <span>Dms</span>
                 </a>
             </li>
 
-            <li class="active">
+            <li>
                 <a href="">
                     <img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon">
                     <span>Profile</span>
                 </a>
             </li>
+
+            <li>
+
+
+                <button class="dropdown-btn">
+                    <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
+                    <span>Workspace</span>
+                </button>
+
+                <div class="content-dd">
+                     <ul id="workspace-dropdown" class="sub-workspace">
+                    <div>
+                        <li><a href="#"></a>My First Workspace</li>
+                        <li><a href="#"></a>Create a new Workspace</li>
+                    </div>
+
+
+                </ul>
+                </div>
+
+            </li>
         </ul>
 
     </nav>
     <main>
-
+        <div class="container">
+            <h1>need to be changed</h1>
+            <p>lorem blablablabalabalan</p>
+        </div>
     </main>
+
+</div>
+
+<script defer>
+    document.addEventListener("DOMContentLoaded", function() {
+        const toggleButton = document.getElementById('toggle-btn');
+        const sidebar = document.getElementById('sidebar');
+
+        toggleButton.addEventListener("click", function() {
+        sidebar.classList.toggle('close');
+        toggleButton.classList.toggle('rotate');
+
+         });
+
+    });
+
+
+</script>
+
 </body>
 </html>
