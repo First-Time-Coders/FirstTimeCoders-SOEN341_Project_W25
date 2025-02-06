@@ -35,8 +35,10 @@
     display: flex;
     padding-top: 50px; /* Offset for the fixed top bar */
     height: calc(100vh - 50px); /* Full height minus top bar */
-
+     flex-grow: 1;
+    min-height: 100vh;
  }
+
 
  #sidebar {
      box-sizing: border-box;
@@ -109,7 +111,7 @@
      transition: 300ms ease-in-out;
      grid-template-rows: 0fr;
 
-     display: none;
+     /*display: none;*/
 
  }
 
@@ -151,10 +153,55 @@
      transition: 300ms ease-in-out;
  }
 
- .container {
-     background: #3d5c75;
-     opacity: .8;
-     border: 1px solid;
- }
 
 
+
+
+
+ .container-channels {
+            width: 250px;
+            height: 100vh;
+            background-color: #738cab;
+            color: white;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .workspace-name {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .channels {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .channel {
+            padding: 8px;
+            background-color: #3d5c75;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .channel:hover {
+            background-color: #bccde1;
+        }
+
+        .create-channel {
+            margin-top: 20px;
+            padding: 10px;
+            text-align: center;
+            background-color: #1d2c44;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .create-channel:hover {
+            background-color: #3d5c75;
+        }

@@ -63,33 +63,47 @@
                 </a>
             </li>
 
-            <li>
+            <li class="dropdown">
 
-
-                <button class="dropdown-btn">
+                <div class="dropdown-menu">
+                    <button class="dropdown-btn">
                     <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
                     <span>Workspace</span>
                 </button>
 
-                <div class="content-dd">
-                     <ul id="workspace-dropdown" class="sub-workspace">
-                    <div>
+                     <ul class="sub-workspace">
+
                         <li><a href="#"></a>My First Workspace</li>
                         <li><a href="#"></a>Create a new Workspace</li>
-                    </div>
-
 
                 </ul>
+
                 </div>
 
+
             </li>
+
+
+
         </ul>
 
     </nav>
     <main>
-        <div class="container">
-            <h1>need to be changed</h1>
-            <p>lorem blablablabalabalan</p>
+        <div class="container-channels">
+            <div class="workspace-name">My First Workspace</div>
+        <div class="channels">
+            <div class="channel"># announcements</div>
+            <div class="channel"># birthdays</div>
+            <div class="channel"># brainstorm</div>
+            <div class="channel"># general</div>
+            <div class="channel"># meetings</div>
+            <div class="channel"># random</div>
+            <div class="channel"># team_bonding</div>
+            <div class="channel"># z_ambassador</div>
+            <div class="channel"># z_competition</div>
+            <div class="channel"># z_conference</div>
+        </div>
+        <div class="create-channel">+ Create a Channel</div>
         </div>
     </main>
 
@@ -107,6 +121,7 @@
          });
 
     });
+
 
 
 </script>
