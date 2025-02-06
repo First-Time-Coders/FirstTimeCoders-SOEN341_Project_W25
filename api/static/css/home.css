@@ -1,63 +1,62 @@
 body {
     display: flex;
-
     align-items: flex-start; /* Align everything to the left */
     justify-content: flex-start;
     height: 100vh;
-    background: #FDF9F9;
+    background: whitesmoke;
     margin: 0;
     flex-direction: column;
     flex-wrap: wrap;
-    padding: 5vh 0;
     font-family: 'Work Sans', sans-serif;
     min-height: 100vh;
 
 }
 
-.globe{
-    top: 5vh;
-    left: 5vw;
-    padding-left: 170px;
+.nav-container{
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
+    justify-content: space-between;
+    align-items: center;
+    width: 100vw;
+    margin: 0 auto;
+    padding: 2vh 0;
+    background-color: #0d1220;
 }
 
-.header {
-    /*position: absolute;*/
-    text-align: left;
-    top: 5vh;
-    left: 5vw;
-    margin-bottom: 70px;
-    transform: translateY(-0.5vh);
-    transition: transform 0.3s ease-in-out;
+.nav-logo{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 15vw;
+    margin-left: 2vw;
+}
+
+.nav-links{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 15vw;
+}
+
+input, select, button {
+    margin: 1vh 0;
+    padding: 1vh;
+    border-radius: 0.5vw;
+    border: 1px solid #ccc;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .header:hover {
     transform: translateY(-1vh);
 }
 
-.header h1 {
-    margin: 5px 0;
-    font-size: 40px;
-    color: #1A1423;
-}
-
 .header p {
     margin: 5px 0;
     font-size: 28px;
-    color: #1A1423;
+    color: #0d1220;
 }
 
 .container {
-    /*display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    height: auto;
-    padding: 5vh 0;
-    gap: 7vw;
-    flex-wrap: wrap;*/
-
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -65,13 +64,13 @@ body {
 }
 
 .home-box {
-    background: #FDF9F9;
+    background: #ECECEB;
     padding: 3vw;
     width: 25vw;
     height: auto;
     position: relative;
     border-radius: 1vw;
-    box-shadow: 0px 0px 2vw rgb(0, 0, 0, 0.2);
+    box-shadow: 0px 0px 0.5vw #738cab;
     display: flex;
     flex-direction: column;
 
@@ -82,27 +81,15 @@ body {
     transition: transform 0.3s ease-in-out;
 }
 
-.home-box h2 {
-    margin: 0 0 10px 0;
-    font-size: 40px;
-    color: #1A1423;}
-
-.home-box p {
-    margin: 0 0 20px 0;
-    font-size: 16px;
-    color: #1A1423;}
-
-.home-box a {
-    padding-top: 10px;
-}
-
 .home-box:hover {
     transform: translateY(-1vh);
 }
 
+
+
 button {
-    background: #5A1E72;
-    color: #FDF9F9;
+    background: #0B1C48;
+    color: #ECECEB;
     border-radius: 0.5vw ;
     border: none;
     width: 100%;
@@ -115,17 +102,17 @@ button {
 }
 
 button:hover {
-    background: #301D40;
+    background: #050d22;
 }
 
 a {
-    color: #5A1E72;
+    color: #265B8B;
 }
 
 a:visited {
-    color: #5A1E72; /* Same as default link color */
+    color: #265B8B; /* Same as default link color */
 }
 
 a:hover {
-    color: #301D40; /* Optional: Change color on hover */
+    color: #050d22; /* Optional: Change color on hover */
 }
