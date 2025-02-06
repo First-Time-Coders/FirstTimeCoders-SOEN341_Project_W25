@@ -12,15 +12,16 @@
     <nav>
         <div class="nav-container">
             <div class="nav-logo">
-                <h1>ChatHaven</h1>
+                <img src="{% static 'images/ChatHaven (3).png' %}" alt="ChatHaven">
             </div>
             <div class="nav-links">
-                <form action="login.html">
-                    <button type="submit">Login</button>
+                <form>
+                    <button formaction="{% url 'login' %}">Login</button>
                 </form>
-                <form action="register.html">
-                    <button type="submit">Register</button>
+                <form>
+                    <button formaction="{% url 'register' %}">Register!</button>
                 </form>
+            </div>
             </div>
         </div>
     </nav>
