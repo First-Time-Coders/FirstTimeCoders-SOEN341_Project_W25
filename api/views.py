@@ -3,6 +3,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from gotrue.errors import AuthApiError
 import supabase
+from postgrest import APIError
+
 from .forms import registerform
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -46,6 +48,14 @@ def register_view(request):
 
         except AuthApiError as e:
             messages.error(request, "Failed register attempt")
+            return redirect('register')
+
+        except APIError as e:
+            if "email" in str(e):  # Check for duplicate email constraint
+                messages.error(request, "This email is already registered.")
+            else:
+                messages.error(request, "A database error occurred. Please try again.")
+
             return redirect('register')
 
         return redirect('login')
