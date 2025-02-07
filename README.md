@@ -4,7 +4,7 @@
 
 * [Project Description](#pd)
 * [Team Members and Roles](#team)
-* [Technologies] (#technologies)
+* [Technologies](#technologies)
 
 
 ## <a name="pd"></a>Project Description
