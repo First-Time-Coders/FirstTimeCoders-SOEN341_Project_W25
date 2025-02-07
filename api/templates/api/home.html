@@ -1,22 +1,32 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    {% load static %}
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home - My Django App</title>
-    <link rel="stylesheet" href="../../static/css/styles.css">  <!-- Optional CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Your place for meaningful connections</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/home.css' %}">
+    <script src="https://onpkg.com/htmx.org@1.9.5"></script>
 </head>
 <body>
-    <h1>Welcome to My Django App</h1>
-    <p>This is the homepage. Click below to log in.</p>
-
-    <a href="{% url 'login' %}">
-        <button>Login</button>
-    </a>
-
-    <p>Or click below to register.</p>
-    <a href="{% url 'register' %}">
-        <button>Register</button>
-    </a>
+    <nav>
+        <div class="nav-container">
+            <div class="nav-logo">
+                <img src="{% static 'images/ChatHaven (3).png' %}" alt="ChatHaven">
+            </div>
+            <div class="nav-links">
+                <form>
+                    <button formaction="{% url 'login' %}">Login</button>
+                </form>
+                <form>
+                    <button formaction="{% url 'register' %}">Register!</button>
+                </form>
+            </div>
+            </div>
+        </div>
+    </nav>
 </body>
 </html>

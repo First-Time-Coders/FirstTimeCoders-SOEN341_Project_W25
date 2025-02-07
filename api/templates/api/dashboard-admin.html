@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Home Page</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <script src="https://onpkg.com/htmx.org@1.9.5"></script>
+</head>
+<body>
+
+<header id="topbar">
+    <div class="top-bar-content">
+        <div class="logo-name">
+            <img src="{% static 'logo/logo.png' %}" style="width: 100px; height: 100px" alt="logo">
+            <span>ChatHaven</span>
+        </div>
+    </div>
+    <div class="logout">
+        <form>
+            <button formaction="{% url 'logout' %}">Logout</button>
+        </form>
+    </div>
+</header>
+<div class="page-container">
+<nav id="sidebar">
+        <ul>
+            <li>
+                <span class="name-app" style="font-weight: 600; font-size: 20px">Dashboard</span>
+                <button id="toggle-btn">
+                    <img src="{% static 'icons/arrowleft-icon.svg' %}" alt="SVG Icon">
+                </button>
+            </li>
+
+               <!-- <a href="">
+                    <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
+                    <span>Workspace</span>
+                </a>-->
+
+
+            <li class="active">
+                <a href="">
+                    <img src="{% static 'icons/home-icon.svg' %}" alt="SVG Icon">
+                    <span>Home</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="">
+                    <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon">
+                    <span>Notification</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="">
+                    <img src="{% static 'icons/dm-icon.svg' %}" alt="SVG Icon">
+                    <span>Dms</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="">
+                    <img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon">
+                    <span>Profile</span>
+                </a>
+            </li>
+
+            <li class="dropdown">
+
+                <div class="dropdown-menu">
+                    <button class="dropdown-btn">
+                    <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
+                    <span>Workspace</span>
+                </button>
+
+                     <ul class="sub-workspace">
+
+                        <li><a href="#"></a>My First Workspace</li>
+                        <li><a href="#"></a>Create a new Workspace</li>
+
+                </ul>
+
+                </div>
+
+
+            </li>
+
+
+
+        </ul>
+
+    </nav>
+    <main id="channelbar">
+
+        <div class="container-channels">
+
+            <div class="workspace-name">My First Workspace</div>
+        <div class="channels">
+            <div class="channel"># announcements</div>
+            <div class="channel"># birthdays</div>
+            <div class="channel"># brainstorm</div>
+            <div class="channel"># general</div>
+            <div class="channel"># meetings</div>
+            <div class="channel"># random</div>
+            <div class="channel"># team_bonding</div>
+            <div class="channel"># z_ambassador</div>
+            <div class="channel"># z_competition</div>
+            <div class="channel"># z_conference</div>
+        </div>
+        <div class="create-channel">+ Create a Channel</div>
+        </div>
+    </main>
+
+</div>
+
+<script defer>
+    document.addEventListener("DOMContentLoaded", function() {
+        const toggleButton = document.getElementById('toggle-btn');
+        const sidebar = document.getElementById('sidebar');
+
+        toggleButton.addEventListener("click", function() {
+        sidebar.classList.toggle('close');
+        toggleButton.classList.toggle('rotate');
+
+         });
+
+    });
+
+
+
+</script>
+
+</body>
+</html>
