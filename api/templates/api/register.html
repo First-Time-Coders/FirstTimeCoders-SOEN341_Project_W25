@@ -3,6 +3,11 @@
 <html lang="en">
 <head>
     <title>Create an account</title>
+    <style>
+        .alert {
+            color: red;
+        }
+    </style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -30,7 +35,13 @@
                 <h2>Sign Up</h2>
                 <p>Let's get started. Are you ready to be part of our community? Sign up for free now!</p>
             </div>
-
+            {% if messages %}
+            <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-success">{{ message }}</div>
+            {% endfor %}
+            </div>
+            {% endif %}
 
         <form id="register-form" method="POST">
             {% csrf_token %}

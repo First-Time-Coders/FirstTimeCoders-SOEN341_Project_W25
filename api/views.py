@@ -27,30 +27,26 @@ def register_view(request):
         last_name = request.POST.get('last_name')
         gender = request.POST.get('gender')
         role = request.POST.get('role')
+        
+        try:
+            # Send registration request to Supabase
+            response = supabase_client.auth.sign_up({"email": email, "password": password})
 
-        if not email or not password:
-            return JsonResponse({"error": "Missing email or password"}, status=400)
+            salt = bcrypt.gensalt()
+            hashed = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8') #hash password
+        
+            db_response = (supabase_client.table('users').insert({
+                "email": email,
+                "username": username,
+                "first name": first_name,
+                "last name": last_name,
+                "password": hashed,
+                "gender": gender,
+                "role": role}).execute())
 
-        # Send registration request to Supabase
-        response = supabase_client.auth.sign_up({"email": email, "password": password})
-
-        if "error" in response:
-            return JsonResponse({"error": response["error"]["message"]}, status=400)
-
-        salt = bcrypt.gensalt()
-        hashed = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8') #hash password
-
-        db_response = (supabase_client.table('users').insert(
-            {"email": email,
-              "username": username,
-              "first name": first_name,
-              "last name": last_name,
-              "password": hashed,
-              "gender": gender,
-              "role": role}).execute())
-
-        if "error" in db_response and db_response["error"]:
-            return JsonResponse({"error": db_response["error"]["message"]}, status=400)
+        except AuthApiError as e:
+            messages.error(request, "Failed register attempt")
+            return redirect('register')
 
         return redirect('login')
 
