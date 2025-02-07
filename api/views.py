@@ -66,7 +66,7 @@ def register_view(request):
 
 def login_view(request):
     if request.method == 'POST':
-        email = request.POST["username"]
+        email = request.POST["email"]
         password = request.POST["password"]
 
         try:
