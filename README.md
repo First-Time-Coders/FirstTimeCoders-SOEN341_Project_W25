@@ -12,11 +12,17 @@
 This project aims to create a modern platform to ease communications between users called ChatHaven. Whether you're collaborating with a team, engaging with a community, or having private conversations with friends, ChatHaven provides an intuitive and organized space to stay connected. The application enable users can create topic-specific channels, share media, and enjoy real-time messaging with a clean and customizable interface.
 
 ## <a name="team"></a>Team Members and Roles
-* Mohammed Safouane Maghni        Front End Developper
-* Julian Valencia                 Back End Developper
-* Sarvesh Sai Rajesh              Back End Developper
-* Zineb Bamouh                    Front End Developper
-* Ileass Bouhout                  Full Stack Developper
+
+**Front-end Developper**
+* Mohammed Safouane Maghni
+* Zineb Bamouh
+  
+**Back-end Developper**
+* Julian Valencia
+* Sarvesh Sai Rajesh
+
+**Full Stack Developper**                        
+* Ileass Bouhout
 
 ## <a name="tech"></a>Technologies
 This web application uses these technologies and frameworks
