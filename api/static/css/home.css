@@ -7,7 +7,7 @@ body {
     margin: 0;
     flex-direction: column;
     flex-wrap: wrap;
-    font-family: 'Work Sans', sans-serif;
+    font-family: 'Roboto', sans-serif;
     min-height: 100vh;
 
 }
@@ -100,16 +100,4 @@ button:hover {
     background-color: #ECECEB;
     border-color: #0d95d8; /*#1b8655*/
     color: #0d95d8;
-}
-
-a {
-    color: #265B8B;
-}
-
-a:visited {
-    color: #265B8B; /* Same as default link color */
-}
-
-a:hover {
-    color: #050d22; /* Optional: Change color on hover */
 }

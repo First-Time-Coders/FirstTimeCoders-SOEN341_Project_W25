@@ -25,6 +25,7 @@ def register_view(request):
         first_name = request.POST.get('first_name')
         last_name = request.POST.get('last_name')
         gender = request.POST.get('gender')
+        role = request.POST.get('role')
 
         if not email or not password:
             return JsonResponse({"error": "Missing email or password"}, status=400)
@@ -44,7 +45,8 @@ def register_view(request):
               "first name": first_name,
               "last name": last_name,
               "password": hashed,
-              "gender": gender}).execute())
+              "gender": gender,
+              "role": role}).execute())
 
         if "error" in db_response and db_response["error"]:
             return JsonResponse({"error": db_response["error"]["message"]}, status=400)
