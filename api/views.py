@@ -89,6 +89,12 @@ def login_view(request):
             messages.error(request, "Failed login attempt")
             return redirect('login')
 
+        except AuthApiError as e:
+            if "invalid_grant" in str(e):  # Supabase returns "invalid_grant" for wrong credentials
+                messages.error(request, "Invalid email or password.")
+            else:
+                messages.error(request, "Authentication failed. Please try again.")
+
     return render(request, "api/login.html")
 
 def logout_view(request):
