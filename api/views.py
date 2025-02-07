@@ -53,6 +53,8 @@ def register_view(request):
         except APIError as e:
             if "email" in str(e):  # Check for duplicate email constraint
                 messages.error(request, "This email is already registered.")
+            elif "username" in str(e):  # Check for duplicate username constraint
+                messages.error(request, "This username is already registered.")
             else:
                 messages.error(request, "A database error occurred. Please try again.")
 
