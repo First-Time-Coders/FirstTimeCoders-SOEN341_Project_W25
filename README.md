@@ -4,6 +4,7 @@
 
 * [Project Description](#pd)
 * [Team Members and Roles](#team)
+* [Technologies] (#technologies)
 
 
 ## <a name="pd"></a>Project Description
@@ -17,7 +18,7 @@ This project aims to create a modern platform to ease communications between use
 * Zineb Bamouh
 * Ileass Bouhout
 
-## Technologies
+## <a name="tech"></a>Technologies
 This web application uses these technologies and frameworks
 
 **Front-end**
