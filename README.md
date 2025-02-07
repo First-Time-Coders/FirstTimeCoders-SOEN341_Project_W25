@@ -4,8 +4,8 @@
 
 * [Project Description](#pd)
 * [Team Members and Roles](#team)
-* [Technologies](#technologies)
-
+* [Technologies](#tech)
+* [Installation](#inst)
 
 ## <a name="pd"></a>Project Description
 
@@ -33,7 +33,7 @@ This web application uses these technologies and frameworks
 **Database**
 * Supabase
 
-## Installation
+## <a name="inst"></a>Installation
 Here's how to set up the application on your environment
 
 **For the front-end:**
