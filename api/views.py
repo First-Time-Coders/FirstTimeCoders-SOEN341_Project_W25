@@ -1,5 +1,3 @@
-import bcrypt
-from django.conf import settings
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from .forms import registerform
@@ -78,6 +76,9 @@ def logout_view(request):
 
 def home_view(request):
     return render(request, "api/home.html")
+
+def dashboard_admin_view(request):
+    return render(request, "api/dashboard-admin.html")
 
 #@login_required
 def dashboard_view(request):
