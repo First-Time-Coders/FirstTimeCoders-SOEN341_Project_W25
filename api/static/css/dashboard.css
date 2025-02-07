@@ -21,6 +21,7 @@
     background-color: #1d2c44; /* Dark background */
     color: #f0ebd8;
     display: flex;
+    justify-content: space-between;
     align-items: center;
     position: absolute; /* Fix the top bar at the top */
     top: 0;
@@ -33,6 +34,34 @@
     max-width: 1200px; /* Adjust as needed */
 
 }
+
+ .logout{
+        margin-right: 5vw;
+        cursor: pointer;
+ }
+
+ .logout button{
+      background: #0d95d8;
+    color: #ECECEB;
+    border-radius: 10vw ;
+    width: 100%;
+    cursor: pointer;
+    font-size: 1vw;
+    align-items: center;
+    box-sizing: border-box;
+    margin: 0.5vh 0;
+    padding: 1vh;
+    padding-left: 2vw;
+    padding-right: 2vw;
+    transition-duration: 0.4s;
+    border: 2px solid #0d95d8;
+ }
+
+ .logout button:hover{
+     background-color: #ECECEB;
+    border-color: #0d95d8; /*#1b8655*/
+    color: #0d95d8;
+ }
 
  .page-container {
     display: flex;

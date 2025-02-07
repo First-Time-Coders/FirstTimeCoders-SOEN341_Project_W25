@@ -16,7 +16,11 @@
             <img src="{% static 'logo/logo.png' %}" style="width: 100px; height: 100px" alt="logo">
             <span>ChatHaven</span>
         </div>
-
+    </div>
+    <div class="logout">
+        <form>
+            <button formaction="{% url 'logout' %}">Logout</button>
+        </form>
     </div>
 </header>
 <div class="page-container">
