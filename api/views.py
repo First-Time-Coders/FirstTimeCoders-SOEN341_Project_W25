@@ -1,10 +1,10 @@
 import bcrypt
+import supabase
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout
 from gotrue.errors import AuthApiError
-import supabase
 from postgrest import APIError
-
+from django.contrib.auth.models import User
 from .forms import registerform
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -46,6 +46,8 @@ def register_view(request):
                 "gender": gender,
                 "role": role}).execute())
 
+            django_user = User.objects.create_user(username=username, email=email, password=password, first_name = first_name, last_name = last_name)
+
         except AuthApiError as e:
             messages.error(request, "Failed register attempt")
             return redirect('register')
@@ -72,10 +74,15 @@ def login_view(request):
         try:
             # Authenticate with Supabase
             response = supabase_client.auth.sign_in_with_password({"email": email, "password": password})
+            user_data = response.user
 
-            if response:
+            if user_data:
                 user_query = supabase_client.table("users").select("role").eq("email", email).single().execute()
                 user_role = user_query.data["role"] if user_query.data else None
+
+                django_user, create = User.objects.get_or_create(username=user_data.id, defaults={'email': email})
+
+                login(request, django_user)
 
                 if user_role == "admin":
                     return redirect("dashboard-admin")  # Replace with actual URL
@@ -86,32 +93,50 @@ def login_view(request):
                 return redirect('login')
 
         except AuthApiError as e:
-            messages.error(request, "Failed login attempt")
-            return redirect('login')
-
-        except AuthApiError as e:
             if "invalid_grant" in str(e):  # Supabase returns "invalid_grant" for wrong credentials
                 messages.error(request, "Invalid email or password.")
             else:
                 messages.error(request, "Authentication failed. Please try again.")
+            return redirect('login')
 
     return render(request, "api/login.html")
 
 def logout_view(request):
     supabase_client.auth.sign_out()
+    logout(request)
     request.session.flush()  # Clear session
     return redirect('login')
 
 def home_view(request):
     return render(request, "api/home.html")
 
+@login_required
 def dashboard_admin_view(request):
 
     return render(request, "api/dashboard-admin.html", {'user': request.user})
 
-#@login_required
+@login_required
 def dashboard_view(request):
     return render(request, 'api/dashboard.html', {'user': request.user})
+
+def create_channel(request):
+    if request.method == 'POST':
+        name = request.POST.get('name')
+        description = request.POST.get('description')
+
+        try:
+            response = supabase_client.table('channels').insert({
+                "name": name,
+                "description": description,
+            }).execute()
+
+            return redirect('dashboard')
+
+        except APIError as e:
+            messages.error(request, "Failed to create channel")
+            return redirect('create_channel')
+
+    return render(request, 'api/create_channel.html')
 
 
 
