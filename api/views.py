@@ -29,6 +29,10 @@ def register_view(request):
         last_name = request.POST.get('last_name')
         gender = request.POST.get('gender')
         role = request.POST.get('role')
+
+        if len(password) < 6:
+            messages.error(request, "Password must be at least 6 characters long.")
+            return redirect('register')
         
         try:
             # Send registration request to Supabase
