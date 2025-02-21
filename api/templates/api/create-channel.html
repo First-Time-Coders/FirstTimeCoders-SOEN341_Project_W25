@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create a Channel</title>
+    <link rel="stylesheet" href="{% static 'css/create_channel.css' %}">
+</head>
+<body>
+    <div class="header">
+        <h1>Create a channel</h1>
+    </div>
+
+    <div class="container">
+        <div class="create-box">
+            <div class="create-message">
+                <p>Let's get started. Are you ready to create a channel? Create a channel now!</p>
+            </div>
+
+            <form id="create-channel-form" method="POST">
+                {% csrf_token %}
+                <input type="text" placeholder="Channel Name" id="channel_name" name="channel_name" required>
+                <input type="text" placeholder="Channel Description" id="channel_description" name="channel_description" required>
+                <input type="submit" value="Create Channel">
+            </form>
+            <a href ="{% url 'dashboard-admin' %}" >Go back to dashboard</a>
+        </div>
+    </div>
+</body>
+</html>
