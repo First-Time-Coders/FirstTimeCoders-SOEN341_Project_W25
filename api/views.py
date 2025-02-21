@@ -1,10 +1,13 @@
+import datetime
+from msilib.schema import CustomAction
+
 import bcrypt
+import uuid
 import supabase
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout
+from django.contrib.auth import login, authenticate, logout, get_user_model
 from gotrue.errors import AuthApiError
 from postgrest import APIError
-from django.contrib.auth.models import User
 from .forms import registerform
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
@@ -12,6 +15,8 @@ from django.contrib import messages
 from supabase import create_client, Client
 from django.contrib.auth.hashers import make_password
 import os
+from .models import CustomUser
+
 
 # Load Supabase credentials
 SUPABASE_URL = "https://rsdvkupcprtchpzuxgtd.supabase.co"
@@ -37,20 +42,25 @@ def register_view(request):
         try:
             # Send registration request to Supabase
             response = supabase_client.auth.sign_up({"email": email, "password": password})
+            user_data = response.user
 
-            salt = bcrypt.gensalt()
-            hashed = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8') #hash password
+            if user_data:
+                user_uuid = user_data.id
+
+                salt = bcrypt.gensalt()
+                hashed = bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8') #hash password
         
-            db_response = (supabase_client.table('users').insert({
-                "email": email,
-                "username": username,
-                "first name": first_name,
-                "last name": last_name,
-                "password": hashed,
-                "gender": gender,
-                "role": role}).execute())
+                db_response = (supabase_client.table('users').insert({
+                    "email": email,
+                    "username": username,
+                    "first name": first_name,
+                    "last name": last_name,
+                    "password": hashed,
+                    "gender": gender,
+                    "role": role}).execute())
 
-            django_user = User.objects.create_user(username=username, email=email, password=password, first_name = first_name, last_name = last_name)
+            User = get_user_model()
+            custom_user = User.objects.create_user(uuid= user_uuid, username=username, email=email, password=hashed, first_name = first_name, last_name = last_name, role = role)
 
         except AuthApiError as e:
             messages.error(request, "Failed register attempt")
@@ -80,21 +90,28 @@ def login_view(request):
             response = supabase_client.auth.sign_in_with_password({"email": email, "password": password})
             user_data = response.user
 
-            if user_data:
-                user_query = supabase_client.table("users").select("role").eq("email", email).single().execute()
-                user_role = user_query.data["role"] if user_query.data else None
-
-                django_user, create = User.objects.get_or_create(username=user_data.id, defaults={'email': email})
-
-                login(request, django_user)
-
-                if user_role == "admin":
-                    return redirect("dashboard-admin")  # Replace with actual URL
-                else:
-                    return redirect("dashboard")
-            else:
-                messages.error(request, "Failed login attempt")
+            if not user_data or not response.user:
+                messages.error(request, "Invalid login credentials")
                 return redirect('login')
+
+            user_uuid = user_data.id
+            username = user_data.user_metadata.get('username', user_data.email)
+
+            user_query = supabase_client.table("users").select("role").eq("email", email).single().execute()
+            user_role = user_query.data["role"] if user_query.data else None
+
+            request.session['user_uuid'] = user_uuid
+
+            User = get_user_model()
+
+            django_user, create = User.objects.get_or_create(email=email, defaults={'username': username, 'uuid': user_uuid})
+
+            login(request, django_user)
+
+            if user_role == "admin":
+               return redirect("dashboard-admin")
+            else:
+                return redirect("dashboard")
 
         except AuthApiError as e:
             if "invalid_grant" in str(e):  # Supabase returns "invalid_grant" for wrong credentials
@@ -123,24 +140,37 @@ def dashboard_admin_view(request):
 def dashboard_view(request):
     return render(request, 'api/dashboard.html', {'user': request.user})
 
+@login_required
 def create_channel(request):
     if request.method == 'POST':
         name = request.POST.get('name')
         description = request.POST.get('description')
+        created_by = request.session.get('user_uuid')
 
         try:
             response = supabase_client.table('channels').insert({
                 "name": name,
                 "description": description,
+                "created_by": created_by,
             }).execute()
 
-            return redirect('dashboard')
+            return redirect('dashboard-admin')
 
         except APIError as e:
             messages.error(request, "Failed to create channel")
-            return redirect('create_channel')
+            return redirect('create-channel')
 
-    return render(request, 'api/create_channel.html')
+    return render(request, 'api/create-channel.html')
+
+@login_required
+def delete_channel(request, id):
+    try:
+        response = supabase_client.table('channels').delete().eq('id', id).execute()
+        return redirect('dashboard')
+
+    except APIError as e:
+        messages.error(request, "Failed to delete channel")
+        return redirect('dashboard')
 
 
 
