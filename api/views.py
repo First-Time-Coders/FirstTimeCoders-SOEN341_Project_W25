@@ -59,6 +59,7 @@ def register_view(request):
                     "gender": gender,
                     "role": role}).execute())
 
+
             User = get_user_model()
             custom_user = User.objects.create_user(uuid= user_uuid, username=username, email=email, password=hashed, first_name = first_name, last_name = last_name, role = role)
 
@@ -101,9 +102,9 @@ def login_view(request):
             user_role = user_query.data["role"] if user_query.data else None
 
             request.session['user_uuid'] = user_uuid
+            request.session['username'] = username
 
             User = get_user_model()
-
             django_user, create = User.objects.get_or_create(email=email, defaults={'username': username, 'uuid': user_uuid})
 
             login(request, django_user)
@@ -145,7 +146,11 @@ def create_channel(request):
     if request.method == 'POST':
         name = request.POST.get('name')
         description = request.POST.get('description')
-        created_by = request.session.get('user_uuid')
+        created_by = request.session.get('username')
+
+        if not created_by:
+            messages.error(request, "User not found")
+            return redirect('create-channel')
 
         try:
             response = supabase_client.table('channels').insert({
