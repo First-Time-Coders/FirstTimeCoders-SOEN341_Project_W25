@@ -1,4 +1,5 @@
 import datetime
+from http.client import responses
 from msilib.schema import CustomAction
 
 import bcrypt
@@ -42,7 +43,7 @@ def register_view(request):
         
         try:
             # Send registration request to Supabase
-            response = supabase_client.auth.sign_up({"email": email, "password": password})
+            response = supabase_client.auth.sign_up({"email": email, "password": password, "options":{"data":{"username":username}}})
             user_data = response.user
 
             if user_data:
@@ -173,3 +174,32 @@ def delete_channel(request, id):
 
 
 
+@supabase_login_required
+#im testin rn but later: messages_view(request, channel_id):
+def messages_view(request, channel_id='a77607f0-be3e-4120-bd81-a2e34ee0f290'):
+    if request.method == 'POST':
+        content = request.POST.get('message')
+        user_uuid = request.session['user_uuid']
+        username = request.session['username']
+
+        print("inserting in db")
+        #create a try-catch if there's an issue
+        response = supabase_client.table('channel_messages').insert({
+            "user_id": user_uuid,
+            "channel_id": channel_id,
+            "message": content,
+            "created_at": datetime.datetime.now().isoformat(),
+            "username": username
+        }).execute()
+
+        print(response)
+
+        return redirect('messages')
+
+#used to fetch messages from a channel
+    message = supabase_client.table('channel_messages').select('message, username').eq('channel_id', channel_id).execute()
+    context = {
+        'messages': message.data,
+        'channel_id': channel_id,
+    }
+    return render(request, "api/messages.html", context)
