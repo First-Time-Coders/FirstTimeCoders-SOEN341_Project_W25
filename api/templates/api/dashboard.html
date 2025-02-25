@@ -97,6 +97,11 @@
 
             <div class="workspace-name">My First Workspace</div>
         <div class="channels">
+            {% for channel in channels %}
+            <div class="channel"># {{ channel.name }}</div>
+            {% empty %}
+            <p>No channels yet.</p>
+            {% endfor %}
         </div>
             <div class="channel"># announcements</div>
             <div class="channel"># birthdays</div>

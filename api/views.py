@@ -1,5 +1,4 @@
 import datetime
-from msilib.schema import CustomAction
 
 import bcrypt
 import uuid
@@ -129,8 +128,13 @@ def home_view(request):
 
 @supabase_login_required
 def dashboard_admin_view(request):
+    try:
+        channels_query = supabase_client.table("channels").select("id, name").execute()
+        channels = channels_query.data if channels_query.data else []
+    except APIError:
+        channels = []
 
-    return render(request, "api/dashboard-admin.html", {'user': request.user})
+    return render(request, "api/dashboard-admin.html", {"user": request.user, "channels": channels})
 
 @supabase_login_required
 def dashboard_view(request):
@@ -171,5 +175,25 @@ def delete_channel(request, id):
         messages.error(request, "Failed to delete channel")
         return redirect('dashboard')
 
+@supabase_login_required
+def view_channel(request, channel_id):
+    try:
+        # Retrieve channel details
+        channel_query = supabase_client.table("channels").select("name, description, created_at").eq("id", channel_id).single().execute()
+        channel = channel_query.data if channel_query.data else None
+
+        if not channel:
+            messages.error(request, "Channel not found.")
+            return redirect("dashboard")
+
+        # Retrieve messages in the channel
+        messages_query = supabase_client.table("messages").select("content, sender_id, created_at").eq("channel_id", channel_id).order("created_at", desc=True).execute()
+        messages_data = messages_query.data if messages_query.data else []
+
+        return render(request, "api/view-channel.html", {"channel": channel, "messages": messages_data})
+
+    except APIError as e:
+        messages.error(request, "Failed to load channel details.")
+        return redirect("dashboard")
 
 
