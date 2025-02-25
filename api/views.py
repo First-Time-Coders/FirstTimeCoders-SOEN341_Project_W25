@@ -11,7 +11,7 @@ from postgrest import APIError
 from .decorators import supabase_login_required
 from .forms import registerform
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from supabase import create_client, Client
 from django.contrib.auth.hashers import make_password
@@ -178,22 +178,22 @@ def delete_channel(request, id):
 @supabase_login_required
 def view_channel(request, channel_id):
     try:
-        # Retrieve channel details
-        channel_query = supabase_client.table("channels").select("name, description, created_at").eq("id", channel_id).single().execute()
-        channel = channel_query.data if channel_query.data else None
+        # Fetch the channel details
+        channel_query = supabase_client.table("channels").select("name").eq("channel_id", channel_id).single().execute()
+        channel = channel_query.data
 
         if not channel:
-            messages.error(request, "Channel not found.")
-            return redirect("dashboard")
+            return HttpResponse("Channel not found", status=404)
 
-        # Retrieve messages in the channel
-        messages_query = supabase_client.table("messages").select("content, sender_id, created_at").eq("channel_id", channel_id).order("created_at", desc=True).execute()
-        messages_data = messages_query.data if messages_query.data else []
+        # Fetch messages related to the channel
+        messages_query = supabase_client.table("channel_messages").select("message, username, created_at").eq("channel_id", channel_id).order("created_at").execute()
+        messages = messages_query.data if messages_query.data else []
 
-        return render(request, "api/view-channel.html", {"channel": channel, "messages": messages_data})
+    except APIError:
+        return HttpResponse("Error fetching channel data", status=500)
 
-    except APIError as e:
-        messages.error(request, "Failed to load channel details.")
-        return redirect("dashboard")
-
+    return render(request, "api/channel.html", {
+        "channel": channel,
+        "messages": messages,
+    })
 

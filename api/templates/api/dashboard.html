@@ -98,7 +98,9 @@
             <div class="workspace-name">My First Workspace</div>
         <div class="channels">
             {% for channel in channels %}
-            <div class="channel"># {{ channel.name }}</div>
+            <a href="{% url 'channel-detail' channel.id %}" class="channel-link">
+                <div class="channel"># {{ channel.name }}</div>
+            </a>
             {% empty %}
             <p>No channels yet.</p>
             {% endfor %}
