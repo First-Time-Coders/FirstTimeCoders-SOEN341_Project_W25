@@ -152,6 +152,9 @@ def create_channel(request):
                 "created_at": datetime.datetime.now().isoformat()
             }).execute()
 
+
+
+
             return redirect('dashboard-admin')
 
         except APIError as e:
