@@ -198,8 +198,13 @@ def messages_view(request, channel_id='a77607f0-be3e-4120-bd81-a2e34ee0f290'):
 
 #used to fetch messages from a channel
     message = supabase_client.table('channel_messages').select('message, username').eq('channel_id', channel_id).execute()
+
+    channel = supabase_client.table('channels').select('name').eq('id', channel_id).single().execute()
+    channel_name = channel.data['name'] if channel.data else "Unknown Channel"
+
     context = {
         'messages': message.data,
         'channel_id': channel_id,
+        'channel_name': channel_name
     }
     return render(request, "api/messages.html", context)
