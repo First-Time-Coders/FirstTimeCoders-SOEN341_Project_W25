@@ -1,7 +1,8 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    {% load static %}
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Home Page</title>
@@ -100,7 +101,7 @@
             <div class="workspace-name">My First Workspace</div>
         <div class="channels">
             {% for channel in channels %}
-            <a href="{% url 'channel-detail' channel.id %}" class="channel-link">
+            <a href="{% url 'messages' channel.id %}" class="channel-link">
                 <div class="channel"># {{ channel.name }}</div>
             </a>
             {% empty %}

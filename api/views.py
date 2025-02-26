@@ -201,7 +201,7 @@ def view_channel(request, channel_id):
 
 @supabase_login_required
 #im testin rn but later: messages_view(request, channel_id):
-def messages_view(request, channel_id='a77607f0-be3e-4120-bd81-a2e34ee0f290'):
+def messages_view(request, channel_id):
     if request.method == 'POST':
         content = request.POST.get('message')
         user_uuid = request.session['user_uuid']
@@ -219,7 +219,7 @@ def messages_view(request, channel_id='a77607f0-be3e-4120-bd81-a2e34ee0f290'):
 
         print(response)
 
-        return redirect('messages')
+        return redirect('messages', channel_id=channel_id)
 
 #used to fetch messages from a channel
     message = supabase_client.table('channel_messages').select('message, username').eq('channel_id', channel_id).execute()
