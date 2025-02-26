@@ -13,7 +13,7 @@ from postgrest import APIError
 from .decorators import supabase_login_required
 from .forms import registerform
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from supabase import create_client, Client
 from django.contrib.auth.hashers import make_password
@@ -130,8 +130,13 @@ def home_view(request):
 
 @supabase_login_required
 def dashboard_admin_view(request):
+    try:
+        channels_query = supabase_client.table("channels").select("id, name").execute()
+        channels = channels_query.data if channels_query.data else []
+    except APIError:
+        channels = []
 
-    return render(request, "api/dashboard-admin.html", {'user': request.user})
+    return render(request, "api/dashboard-admin.html", {"user": request.user, "channels": channels})
 
 @supabase_login_required
 def dashboard_view(request):
@@ -172,7 +177,27 @@ def delete_channel(request, id):
         messages.error(request, "Failed to delete channel")
         return redirect('dashboard')
 
+@supabase_login_required
+def view_channel(request, channel_id):
+    try:
+        # Fetch the channel details
+        channel_query = supabase_client.table("channels").select("name").eq("channel_id", channel_id).single().execute()
+        channel = channel_query.data
 
+        if not channel:
+            return HttpResponse("Channel not found", status=404)
+
+        # Fetch messages related to the channel
+        messages_query = supabase_client.table("channel_messages").select("message, username, created_at").eq("channel_id", channel_id).order("created_at").execute()
+        messages = messages_query.data if messages_query.data else []
+
+    except APIError:
+        return HttpResponse("Error fetching channel data", status=500)
+
+    return render(request, "api/channel.html", {
+        "channel": channel,
+        "messages": messages,
+    })
 
 @supabase_login_required
 #im testin rn but later: messages_view(request, channel_id):
