@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  {% load static %}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ channel.name }}</title>
+  <link rel="stylesheet" href="{% static 'css/channel.css' %}">
+</head>
+<body>
+
+<header>
+  <h1># {{ channel.name }}</h1>
+</header>
+
+<div class="messages-container">
+  {% for message in messages %}
+  <div class="message">
+    <strong>{{ message.sender }}:</strong> {{ message.content }} <span class="timestamp">{{ message.timestamp }}</span>
+  </div>
+  {% empty %}
+  <p>No messages yet.</p>
+  {% endfor %}
+</div>
+
+<form method="post" action="{% url 'channel-detail' channel.id %}">
+  {% csrf_token %}
+  <textarea name="message" placeholder="Type your message here..." required></textarea>
+  <button type="submit">Send</button>
+</form>
+
+</body>
+</html>

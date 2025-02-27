@@ -102,6 +102,17 @@ form {
     width: 100%;
 }
 
+button {
+    background: #0d95d8;
+    color: #ECECEB;
+    border-radius: 10vw;
+    cursor: pointer;
+    font-size: 1.5vw;
+    align-items: center;
+    transition-duration: 0.4s;
+    border: 2px solid #0d95d8;
+}
+
 input, select, button {
     margin: 1vh 0;
     padding: 1vh;
@@ -113,17 +124,6 @@ input, select, button {
 
 select {
     color: grey;
-}
-
-button {
-    background: #0d95d8;
-    color: #ECECEB;
-    border-radius: 10vw;
-    cursor: pointer;
-    font-size: 1.5vw;
-    align-items: center;
-    transition-duration: 0.4s;
-    border: 2px solid #0d95d8;
 }
 
 button:hover {

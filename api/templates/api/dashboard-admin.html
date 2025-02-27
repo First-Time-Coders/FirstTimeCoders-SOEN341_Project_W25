@@ -1,7 +1,8 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    {% load static %}
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Home Page</title>
@@ -94,26 +95,57 @@
     </nav>
     <main id="channelbar">
 
+
         <div class="container-channels">
 
             <div class="workspace-name">My First Workspace</div>
         <div class="channels">
+            {% for channel in channels %}
+            <a href="{% url 'messages' channel.id %}" class="channel-link">
+                <div class="channel"># {{ channel.name }}</div>
+            </a>
+            {% empty %}
+            <p>No channels yet.</p>
+            {% endfor %}
             <div class="channel"># announcements</div>
-            <div class="channel"># birthdays</div>
-            <div class="channel"># brainstorm</div>
-            <div class="channel"># general</div>
-            <div class="channel"># meetings</div>
-            <div class="channel"># random</div>
-            <div class="channel"># team_bonding</div>
-            <div class="channel"># z_ambassador</div>
-            <div class="channel"># z_competition</div>
-            <div class="channel"># z_conference</div>
+
         </div>
-        <div class="create-channel">+ Create a Channel</div>
+            <form>
+                <button formaction="{% url 'create-channel' %}">+ Create a Channel</button>
+            </form>
         </div>
     </main>
 
 </div>
+
+
+ <div class="chat-container">
+
+        <div class="channel-header">
+            <h1 id="channel-name">Channel Name</h1>
+        </div>
+
+        <div class="message-container" id="message-container">
+            <!-- where the messages should be loaded i hope -->
+            {% for message in messages %}
+            <div class="message">
+                <p><strong>{{ message.user_id }}:</strong> {{ message.content }}</p>
+            </div>
+            {% empty %}
+            <p>It's quiet in here...</p>
+            {% endfor %}
+        </div>
+
+        <div class="message-input">
+            <form method="POST" action="% dashboard-admin/messages/ 'messages_view' channel_id=channel_id %">
+
+                {% csrf_token %}
+                <input type="text" name="message" placeholder="Type your message...">
+                <button type="submit">Send</button>
+            </form>
+
+        </div>
+    </div>
 
 <script defer>
     document.addEventListener("DOMContentLoaded", function() {
