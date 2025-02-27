@@ -1,0 +1,95 @@
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f7f8fa;
+    margin: 0;
+    padding: 0;
+}
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Channel Header */
+.channel-header {
+    padding-bottom: 10px;
+    border-bottom: 2px solid #f1f1f1;
+}
+
+#channel-name {
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* Message Container */
+.message-container {
+    flex: 1;
+    overflow-y: auto;
+    margin-top: 20px;
+}
+
+/* Message Block */
+.message {
+    padding: 10px;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.message p {
+    margin: 0;
+}
+
+.message strong {
+    font-weight: 600;
+    color: #007bff;
+}
+
+.message:hover {
+    background-color: #f1f1f1;
+}
+
+/* Empty State */
+.message-container p {
+    font-size: 16px;
+    color: #888;
+}
+
+/* Input Area */
+.message-input {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    border-top: 1px solid #f1f1f1;
+    padding-top: 10px;
+}
+
+.message-input input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-right: 10px;
+    outline: none;
+}
+
+.message-input button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.message-input button:hover {
+    background-color: #0056b3;
+}

@@ -211,7 +211,7 @@ def messages_view(request, channel_id):
         #create a try-catch if there's an issue
         response = supabase_client.table('channel_messages').insert({
             "user_id": user_uuid,
-            "channel_id": channel_id,
+            "channel_id": str(channel_id),
             "message": content,
             "created_at": datetime.datetime.now().isoformat(),
             "username": username
