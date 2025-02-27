@@ -210,6 +210,25 @@
 
         }
 
+    .channel-item {
+        display:flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    #settings-btn{
+        margin-left: auto;
+        border: none;
+        padding-top:4px;
+        padding-left:4px;
+        padding-right:4px;
+        border-right: .5em;
+        border-radius: 10vw;
+        background: #3d5c75;
+        cursor: pointer;
+    }
+
         .workspace-name {
             font-size: 18px;
             font-weight: bold;
@@ -225,9 +244,11 @@
         .channel {
             padding: 8px;
             background-color: #3d5c75;
-            border-radius: 5px;
+            border-radius: 10vw;
+            width: 10vw;
             cursor: pointer;
             transition: background 0.3s ease;
+
         }
 
         .channel:hover {

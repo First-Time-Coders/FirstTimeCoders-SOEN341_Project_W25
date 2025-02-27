@@ -86,7 +86,7 @@
                             <div class="channel"># {{ channel.name }}</div>
                         </a>
                     <div class="channel-settings">
-                        <button class="settings-btn" onclick="toggleDropdown('{{ channel.id }}')">
+                        <button id="settings-btn" onclick="toggleDropdown('{{ channel.id }}')">
                             <img src="{% static 'icons/settings-icon.svg' %}" alt="SVG Icon">
                         </button>
                         <div class="dropdown-menu" id="dropdown-{{ channel.id }}" style="display: none;">
