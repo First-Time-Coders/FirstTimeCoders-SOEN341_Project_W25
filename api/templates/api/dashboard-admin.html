@@ -18,11 +18,7 @@
             <span>Chat Haven</span>
         </div>
     </div>
-    <div class="logout">
-        <form>
-            <button formaction="{% url 'logout' %}">Logout</button>
-        </form>
-    </div>
+
 </header>
 <div class="page-container">
 <nav id="sidebar">
@@ -68,26 +64,19 @@
                 </a>
             </li>
 
-            <li class="dropdown">
-
-                <div class="dropdown-menu">
-                    <button class="dropdown-btn">
+            <li>
+                <a href="">
                     <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
                     <span>Workspace</span>
-                </button>
-
-                     <ul class="sub-workspace">
-
-                        <li><a href="#"></a>My First Workspace</li>
-                        <li><a href="#"></a>Create a new Workspace</li>
-
-                </ul>
-
-                </div>
+                </a>
 
 
             </li>
-
+             <div class="logout">
+                <form>
+                    <button id="logout-button" formaction="{% url 'logout' %}">Logout</button>
+                </form>
+            </div>
 
 
         </ul>
@@ -107,11 +96,10 @@
             {% empty %}
             <p>No channels yet.</p>
             {% endfor %}
-            <div class="channel"># announcements</div>
 
         </div>
             <form>
-                <button formaction="{% url 'create-channel' %}">+ Create a Channel</button>
+                <button class="create-channel" formaction="{% url 'create-channel' %}">+ Create a Channel</button>
             </form>
         </div>
     </main>
@@ -119,32 +107,13 @@
 </div>
 
 
- <div class="chat-container">
+ <div class="channel-info-container">
 
-        <div class="channel-header">
-            <h1 id="channel-name">Channel Name</h1>
-        </div>
 
-        <div class="message-container" id="message-container">
-            <!-- where the messages should be loaded i hope -->
-            {% for message in messages %}
-            <div class="message">
-                <p><strong>{{ message.user_id }}:</strong> {{ message.content }}</p>
-            </div>
-            {% empty %}
-            <p>It's quiet in here...</p>
-            {% endfor %}
-        </div>
+            <h1 id="channel-name">Channel Info</h1>
 
-        <div class="message-input">
-            <form method="POST" action="% dashboard-admin/messages/ 'messages_view' channel_id=channel_id %">
 
-                {% csrf_token %}
-                <input type="text" name="message" placeholder="Type your message...">
-                <button type="submit">Send</button>
-            </form>
 
-        </div>
     </div>
 
 <script defer>
