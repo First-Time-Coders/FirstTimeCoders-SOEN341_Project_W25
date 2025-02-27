@@ -167,15 +167,18 @@ def create_channel(request):
     return render(request, 'api/create-channel.html')
 
 @supabase_login_required
-def delete_channel(request, id):
+def delete_channel(request, channel_id):
+    if request.method == 'POST':
+        try:
+            supabase_client.table('channels').delete().eq('id', channel_id).execute()
+            messages.success(request, "Channel deleted successfully")
+            return redirect('dashboard-admin')
 
-    try:
-        response = supabase_client.table('channels').delete().eq('id', id).execute()
-        return redirect('dashboard')
+        except APIError as e:
+            messages.error(request, "Failed to delete channel")
+            return redirect('dashboard-admin')
 
-    except APIError as e:
-        messages.error(request, "Failed to delete channel")
-        return redirect('dashboard')
+    return redirect('dashboard-admin')
 
 @supabase_login_required
 def view_channel(request, channel_id):
