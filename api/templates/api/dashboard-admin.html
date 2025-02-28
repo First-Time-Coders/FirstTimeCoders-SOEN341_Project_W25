@@ -63,35 +63,23 @@
                     <span>Profile</span>
                 </a>
             </li>
-            <li class="dropdown">
-                <div class="dropdown-menu">
-                    <button class="dropdown-btn">
+
+            <li>
+                <a href="">
                     <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
                     <span>Workspace</span>
-                </button>
-
-                     <ul class="sub-workspace">
-
-                        <li><a href="#"></a>My First Workspace</li>
-                        <li><a href="#"></a>Create a new Workspace</li>
-
-                </ul>
-
-                </div>
-
-
+                </a>
             </li>
 
-
-
+            <div class="logout">
+                <form>
+                    <button id="logout-button" formaction="{% url 'logout' %}">Logout</button>
+                </form>
+            </div>
         </ul>
-
     </nav>
     <main id="channelbar">
-
-
         <div class="container-channels">
-
             <div class="workspace-name">My First Workspace</div>
             <div class="channels">
                 {% for channel in channels %}
@@ -114,6 +102,7 @@
                 {% empty %}
                 <p>No channels yet.</p>
                 {% endfor %}
+
             </div>
                 <form>
                     <button formaction="{% url 'create-channel' %}">+ Create a Channel</button>
@@ -125,17 +114,8 @@
 
 
  <div class="channel-info-container">
-
-
             <h1 id="channel-name">Channel Info</h1>
-
-                {% csrf_token %}
-                <input type="text" name="message" placeholder="Type your message...">
-                <button type="submit">Send</button>
-            </form>
-
-
-    </div>
+ </div>
 
 <script defer>
     document.addEventListener("DOMContentLoaded", function() {
