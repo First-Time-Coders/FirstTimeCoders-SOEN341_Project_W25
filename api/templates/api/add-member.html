@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Add Member</title>
+    <style>
+        .alert {
+            color: red;
+        }
+    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/register.css' %}">
+    <script src="https://onpkg.com/htmx.org@1.9.5"></script>
+</head>
+<body>
+<div class="header">
+    <h1>ChatHaven - Add Member</h1>
+    <p>Add a new member to your channel</p>
+</div>
+
+<div class="container">
+    <div class="register-box">
+        <div class="signup-message">
+            <h2>Add Member</h2>
+            <p>Invite a new member to your channel by entering their username!</p>
+        </div>
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert alert-success">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form id="add-member-form" method="POST" action="{% url 'add-member' channel_id %}">
+            {% csrf_token %}
+            <input type="text" placeholder="Enter Member's Username" name="username" required>
+
+            <button type="submit">Add Member</button>
+        </form>
+        <a href="{% url 'dashboard-admin' %}">Back to Dashboard</a>
+    </div>
+</div>
+</body>
+</html>

@@ -1,6 +1,5 @@
 import datetime
 from http.client import responses
-from msilib.schema import CustomAction
 
 import bcrypt
 import uuid
@@ -205,9 +204,13 @@ def view_channel(request, channel_id):
 @supabase_login_required
 #im testin rn but later: messages_view(request, channel_id):
 def messages_view(request, channel_id):
+    user_uuid = request.session['user_uuid']
+    member_check = supabase_client.table("channel_members").select("id").eq("user_id", user_uuid).eq("channel_id", channel_id).execute()
+    if not member_check.data:
+        return HttpResponse("Access Denied: You are not a member of this channel", status=403)
+
     if request.method == 'POST':
         content = request.POST.get('message')
-        user_uuid = request.session['user_uuid']
         username = request.session['username']
 
         print("inserting in db")
@@ -236,3 +239,31 @@ def messages_view(request, channel_id):
         'channel_name': channel_name
     }
     return render(request, "api/messages.html", context)
+
+def add_member(request, channel_id):
+    if request.method == "POST":
+        username = request.POST.get("username")
+
+        # Fetch the user_id from Supabase using the username
+        user_response = supabase_client.table("users").select("id").eq("username", username).execute()
+
+        if user_response.data is not None and len(user_response.data) > 0:
+            user_id = user_response.data[0]['id']
+            print(str(channel_id))
+            print(request.user.id)
+
+            # Add the user to the channel_members table
+            response = supabase_client.table("channel_members").insert({
+                "user_id": user_id,
+                "channel_id": str(channel_id),
+                "added_by": "d1c883dc-b7a4-44fd-a83d-988b1563230c" #Hardcoded for now, can't seem to find the username of the one who is logged in
+            }).execute()
+
+            if response.data:
+                return redirect("dashboard-admin")  # Redirect to dashboard
+            else:
+                return HttpResponse("Error adding member", status=400)
+        else:
+            return HttpResponse("User not found", status=404)
+
+    return render(request, "api/add-member.html", {"channel_id": channel_id})
