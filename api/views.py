@@ -243,6 +243,7 @@ def messages_view(request, channel_id):
 def add_member(request, channel_id):
     if request.method == "POST":
         username = request.POST.get("username")
+        current_user_uuid = request.session['user_uuid']
 
         # Fetch the user_id from Supabase using the username
         user_response = supabase_client.table("users").select("id").eq("username", username).execute()
@@ -256,7 +257,7 @@ def add_member(request, channel_id):
             response = supabase_client.table("channel_members").insert({
                 "user_id": user_id,
                 "channel_id": str(channel_id),
-                "added_by": "d1c883dc-b7a4-44fd-a83d-988b1563230c" #Hardcoded for now, can't seem to find the username of the one who is logged in
+                "added_by": current_user_uuid
             }).execute()
 
             if response.data:
