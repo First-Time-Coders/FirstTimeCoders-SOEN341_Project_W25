@@ -89,7 +89,7 @@
                         </a>
                     <div class="channel-settings">
                         <button id="settings-btn" onclick="toggleDropdown('{{ channel.id }}')">
-                            <img src="{% static 'icons/settings-icon.svg' %}" alt="SVG Icon">
+                            <img src="{% static 'icons/settings2.svg' %}" alt="SVG Icon">
                         </button>
                         <div class="dropdown-menu" id="dropdown-{{ channel.id }}" style="display: none;">
                             <form method="POST" action="{% url 'delete-channel' channel.id %}" onsubmit="return confirmDelete('{{ channel_name }}');">
@@ -105,7 +105,7 @@
 
             </div>
                 <form>
-                    <button formaction="{% url 'create-channel' %}">+ Create a Channel</button>
+                    <button class="create-channel" formaction="{% url 'create-channel' %}">+ Create a Channel</button>
                 </form>
         </div>
     </main>

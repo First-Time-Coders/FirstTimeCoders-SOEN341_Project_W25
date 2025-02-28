@@ -221,7 +221,7 @@
         padding-right:4px;
         border-right: .5em;
         border-radius: 10vw;
-        background: #3d5c75;
+        background: #0F3923;
         cursor: pointer;
     }
 
@@ -241,10 +241,13 @@
             padding: 8px;
             border-radius: 5px;
             cursor: pointer;
+            width: 100px;
             transition: background 0.3s ease;
         }
 
-
+        a:visited {
+            color: #0F3923;
+        }
 
         .channel:hover {
             background-color: #0F3923;
@@ -255,11 +258,11 @@
             margin-top: 20px;
             padding: 10px;
             text-align: center;
-            background-color: #1d2c44;
+            background-color: #0F3923;
             border-radius: 5px;
             border: none;
             cursor: pointer;
-            background: #F8F8F8;
+            background: #F5F5F5;
             transition: background 0.3s ease;
         }
 
