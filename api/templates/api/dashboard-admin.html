@@ -14,15 +14,11 @@
 <header id="topbar">
     <div class="top-bar-content">
         <div class="logo-name">
-            <img src="{% static 'logo/logo.png' %}" style="width: 100px; height: 100px" alt="logo">
-            <span>ChatHaven</span>
+            <img src="{% static 'logo/pixelcut-export.png' %}" style="width: 100px; height: 45px" alt="logo">
+            <span>Chat Haven</span>
         </div>
     </div>
-    <div class="logout">
-        <form>
-            <button formaction="{% url 'logout' %}">Logout</button>
-        </form>
-    </div>
+
 </header>
 <div class="page-container">
 <nav id="sidebar">
@@ -38,24 +34,29 @@
                     <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
                     <span>Workspace</span>
                 </a>-->
+
+
             <li class="active">
                 <a href="">
                     <img src="{% static 'icons/home-icon.svg' %}" alt="SVG Icon">
                     <span>Home</span>
                 </a>
             </li>
+
             <li>
                 <a href="">
                     <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon">
                     <span>Notification</span>
                 </a>
             </li>
+
             <li>
                 <a href="">
                     <img src="{% static 'icons/dm-icon.svg' %}" alt="SVG Icon">
                     <span>Dms</span>
                 </a>
             </li>
+
             <li>
                 <a href="">
                     <img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon">
@@ -68,16 +69,29 @@
                     <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
                     <span>Workspace</span>
                 </button>
+
                      <ul class="sub-workspace">
+
                         <li><a href="#"></a>My First Workspace</li>
                         <li><a href="#"></a>Create a new Workspace</li>
-                    </ul>
+
+                </ul>
+
                 </div>
+
+
             </li>
+
+
+
         </ul>
+
     </nav>
     <main id="channelbar">
+
+
         <div class="container-channels">
+
             <div class="workspace-name">My First Workspace</div>
             <div class="channels">
                 {% for channel in channels %}
@@ -106,35 +120,21 @@
                 </form>
         </div>
     </main>
+
 </div>
 
 
- <div class="chat-container">
+ <div class="channel-info-container">
 
-        <div class="channel-header">
-            <h1 id="channel-name">Channel Name</h1>
-        </div>
 
-        <div class="message-container" id="message-container">
-            <!-- where the messages should be loaded i hope -->
-            {% for message in messages %}
-            <div class="message">
-                <p><strong>{{ message.user_id }}:</strong> {{ message.content }}</p>
-            </div>
-            {% empty %}
-            <p>It's quiet in here...</p>
-            {% endfor %}
-        </div>
-
-        <div class="message-input">
-            <form method="POST" action="% dashboard-admin/messages/ 'messages_view' channel_id=channel_id %">
+            <h1 id="channel-name">Channel Info</h1>
 
                 {% csrf_token %}
                 <input type="text" name="message" placeholder="Type your message...">
                 <button type="submit">Send</button>
             </form>
 
-        </div>
+
     </div>
 
 <script defer>
