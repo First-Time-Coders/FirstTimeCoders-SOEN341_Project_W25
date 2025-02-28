@@ -11,41 +11,56 @@
             justify-content: center;
             align-items: center;
             height: 100vh;
-            background-color: #f4f4f4;
+            background-color: #F5F5F5;
         }
         .login-container {
-            background: white;
+            background: #F5F5F5;
             padding: 25px;
-            border-radius: 10px;
+            border-radius: 5px;
             box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
             width: 300px;
             text-align: center;
+            transform: translateY(-0.5vh);
+            transition: transform 0.3s ease-in-out;
         }
+
+        .login-container:hover{
+            transform: translateY(-1vh);
+        }
+
+
         input {
             width: 92%;
             padding: 10px;
             margin: 10px 0;
-            border: 1px solid #ccc;
+            border: 1px solid #F5F5F5;
             border-radius: 5px;
         }
         button {
             width: 100%;
             padding: 10px;
-            background-color: #0032ff;
-            color: white;
+            background-color: #0F3923;
+            color: #F5F5F5;
             border: none;
             border-radius: 5px;
             cursor: pointer;
             margin-bottom: 10px;
         }
         button:hover {
-            background-color: #000cff;
+            background-color: #0F3923;
+            filter: brightness(150%);
+                transition: 300ms ease-in-out;
         }
         .register-link {
             display: block;
             margin-top: 10px;
             font-size: 14px;
         }
+
+        .login-container h2, .register-link {
+            color: #0F3923;
+        }
+
         .alert {
             color: red;
         }

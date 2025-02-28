@@ -23,7 +23,7 @@ body {
 }
 
 button{
-    background: #0d95d8;
+    background: #0F3923;
     color: #ECECEB;
     border-radius: 10vw ;
     width: 100%;
@@ -36,7 +36,7 @@ button{
     padding-left: 2vw;
     padding-right: 2vw;
     transition-duration: 0.4s;
-    border: 2px solid #0d95d8;
+    border: 2px solid #0F3923;
 }
 
 .nav-logo{
@@ -98,6 +98,6 @@ button{
 
 button:hover {
     background-color: #ECECEB;
-    border-color: #0d95d8; /*#1b8655*/
-    color: #0d95d8;
+    border-color: #0F3923; /*#1b8655*/
+    color: #0F3923;
 }
