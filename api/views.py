@@ -203,7 +203,6 @@ def view_channel(request, channel_id):
     })
 
 @supabase_login_required
-#im testin rn but later: messages_view(request, channel_id):
 def messages_view(request, channel_id):
     if request.method == 'POST':
         content = request.POST.get('message')
@@ -225,7 +224,7 @@ def messages_view(request, channel_id):
         return redirect('messages', channel_id=channel_id)
 
 #used to fetch messages from a channel
-    message = supabase_client.table('channel_messages').select('message, username').eq('channel_id', channel_id).execute()
+    message = supabase_client.table('channel_messages').select('message, username, id').eq('channel_id', channel_id).execute()
 
     channel = supabase_client.table('channels').select('name').eq('id', channel_id).single().execute()
     channel_name = channel.data['name'] if channel.data else "Unknown Channel"
@@ -236,3 +235,18 @@ def messages_view(request, channel_id):
         'channel_name': channel_name
     }
     return render(request, "api/messages.html", context)
+
+@supabase_login_required
+def delete_message(request, message_id):
+    if request.method == 'POST':
+        try:
+            supabase_client.table('channel_messages').delete().eq('id', message_id).execute()
+            messages.success(request, "Message deleted successfully")
+            return redirect('messages', channel_id=request.POST.get('channel_id'))
+        except APIError as e:
+            messages.error(request, "Failed to delete message")
+            return redirect('messages', channel_id=request.POST.get('channel_id'))
+
+    return redirect('messages', channel_id=request.POST.get('channel_id'))
+
+

@@ -37,11 +37,6 @@ body {
 }
 
 /* Message Block */
-.message {
-    padding: 10px;
-    border-bottom: 1px solid #f1f1f1;
-}
-
 .message p {
     margin: 0;
 }
@@ -51,12 +46,22 @@ body {
     color: #0F3923;
 }
 
+.message{
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 10px ;
+    background-color: #F8F8F8;
+    transition: background 0.3s ease;
+    width:100%;
+}
+
 .message:hover {
-    background-color: #f1f1f1;
+    background-color: #F5F5F5;
 }
 
 /* Empty State */
 .message-container p {
+    text-align: left;
     font-size: 16px;
     color: #888;
 }
@@ -65,9 +70,16 @@ body {
 .message-input {
     margin-top: 20px;
     display: flex;
-    align-items: center;
+    flex-direction: row;
     border-top: 1px solid #f1f1f1;
     padding-top: 10px;
+    width: 100%;
+}
+
+.message-input form{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
 }
 
 .message-input input {
@@ -83,7 +95,7 @@ body {
 .message-input button {
     padding: 10px 15px;
     background-color: #0F3923;
-    color: white;
+    color: #F5F5F5;
     border: none;
     border-radius: 4px;
     font-size: 14px;
@@ -91,6 +103,61 @@ body {
 }
 
 .message-input button:hover {
-    background-color: #FAFAFA;
-    color: #0F3923;
+    background-color: #0F3923;
+    color: #F5F5F5;
+    filter: brightness(150%);
+        transition: 0.3s ease-in-out;
 }
+
+.delete-window{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #F5F5F5;
+    padding: 20px;
+    border-radius: 8px;
+    text-align: center;
+    width: 300px;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.delete-window button{
+    background: #F5F5F5;
+    color: #0F3923;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 5px;
+    transition: background 0.3s ease;
+}
+
+.delete-window button:hover {
+    background: darkred;
+    color: #F5F5F5;
+}
+
+.message-content{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    text-align: center;
+    width: 100%;
+}
+
+.settings-btn{
+    background: #0F3923;
+    border:none;
+    padding-left: 4px;
+    padding-right: 4px;
+    padding-top: 4px;
+    padding-bottom: 0px;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    transition: background 0.3s ease-in-out;
+}
+
+
+

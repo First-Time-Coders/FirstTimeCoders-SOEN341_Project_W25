@@ -19,9 +19,19 @@
         <div class="message-container" id="message-container">
             <!-- where the messages should be loaded i hope -->
             {% for message in messages %}
-            <div class="message">
-                <p><strong>{{ message.username }}:</strong> {{ message.message }}</p>
-            </div>
+                <div class="message-content" id="message-{{ message.id }}">
+                <div class="message">
+                    <p><strong>{{ message.username }}:</strong> {{ message.message }}</p>
+                </div>
+                <div class="message-settings">
+                    <button class="settings-btn" onclick="toggleDeleteWindow({{ message.id }})">
+                        <img src="{% static 'icons/settings2.svg' %}" alt="SVG Icon">
+                    </button>
+                    <div class="delete-window" id="delete-window-{{ message.id }}" style="display: none">
+                        <button type="button {% url 'delete-message' message.id %}" >Delete</button>
+                    </div>
+                </div>
+                </div>
             {% empty %}
             <p>It's quiet in here...</p>
             {% endfor %}
@@ -29,13 +39,48 @@
 
         <div class="message-input">
             <form method="POST">
-
                 {% csrf_token %}
-                <input type="text" name="message" placeholder="Type your message...">
-                <button type="submit">Send</button>
+                    <input type="text" name="message" placeholder="Type your message...">
+                    <button type="submit">Send</button>
             </form>
 
         </div>
     </div>
+
+<script defer>
+    function toggleDeleteWindow(messageId) {
+        // Hide other settings windows
+        document.querySelectorAll('.delete-window').forEach(window => {
+            if (window.id !== "delete-window-" + messageId) {
+                window.style.display = "none";
+            }
+        });
+
+        let deleteWindow = document.getElementById("delete-window-" + messageId);
+
+        if (deleteWindow.style.display === "block") {
+            deleteWindow.style.display = "none";
+            return;
+        } else {
+            deleteWindow.style.display = "block";
+        }
+
+        // Get button position
+        let rect = button.getBoundingClientRect();
+
+        // Position settings window to the right of the button
+        deleteWindow.style.position = "absolute";
+        deleteWindow.style.left = `${rect.right + window.scrollX + 10}px`; // Shift right
+        deleteWindow.style.top = `${rect.top + window.scrollY}px`; // Align with button
+
+        // Close when clicking outside
+        document.addEventListener("click", function(event) {
+            if (!deleteWindow.contains(event.target) && !button.contains(event.target)) {
+                deleteWindow.style.display = "none";
+            }
+        }, { once: true });
+    }
+</script>
+
 </body>
 </html>
