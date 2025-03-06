@@ -1,0 +1,34 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DM with {{ other_user }}</title>
+    <link rel="stylesheet" href="{% static 'css/messages.css' %}">
+    <script src="https://unpkg.com/htmx.org@1.9.5"></script> <!-- Optional: For real-time updates -->
+</head>
+<body>
+    <div class="chat-container">
+        <div class="channel-header">
+            <h1 id="channel-name">DM with {{ other_user }}</h1>
+        </div>
+        <div class="message-container" id="message-container">
+            {% for message in messages %}
+                <div class="message{% if not message.is_read %} unread{% endif %}">
+                    <p><strong>{{ message.username }}:</strong> {{ message.content }} <span>{{ message.created_at }}</span></p>
+                </div>
+            {% empty %}
+                <p>Start the conversation!</p>
+            {% endfor %}
+        </div>
+        <div class="message-input">
+            <form method="POST">
+                {% csrf_token %}
+                <input type="text" name="message" placeholder="Type your message...">
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

@@ -16,6 +16,9 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from supabase import create_client, Client
+
+from postgrest import APIError
+
 from django.contrib.auth.hashers import make_password
 import os
 
@@ -26,6 +29,13 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 # Initialize Supabase client
 supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
+
+def supabase_login_required(view_func):
+    def wrapper(request, *args, **kwargs):
+        if 'user_uuid' not in request.session:
+            return redirect('login')
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 def register_view(request):
     if request.method == 'POST':
@@ -251,4 +261,100 @@ def delete_message(request, message_id):
 
     return redirect('messages', channel_id=request.POST.get('channel_id'))
 
+@supabase_login_required
+def dm_list_view(request):
+    user_uuid = request.session['user_uuid']
+    try:
+        # Fetch conversations where the user is either user1 or user2
+        conversations = supabase_client.table("Conversations").select("id, user1_id, user2_id").or_(f"user1_id.eq.{user_uuid},user2_id.eq.{user_uuid}").execute()
+        dm_list = []
+        for conv in conversations.data:
+            other_user_id = conv['user2_id'] if conv['user1_id'] == user_uuid else conv['user1_id']
+            user_query = supabase_client.table("users").select("username").eq("id", other_user_id).single().execute()
+            dm_list.append({
+                "conversation_id": conv['id'],
+                "other_user": user_query.data['username'] if user_query.data else "Unknown"
+            })
+    except APIError as e:
+        messages.error(request, "Failed to load DMs")
+        dm_list = []
+    
+    return render(request, "api/dm_list.html", {"dm_list": dm_list})
 
+@supabase_login_required
+def dm_view(request, conversation_id):
+    user_uuid = request.session['user_uuid']
+    try:
+        # Verify user is part of this conversation
+        conv_query = supabase_client.table("Conversations").select("user1_id, user2_id").eq("id", conversation_id).single().execute()
+        if not conv_query.data or (user_uuid not in [conv_query.data['user1_id'], conv_query.data['user2_id']]):
+            return HttpResponse("Unauthorized or conversation not found", status=403)
+
+        # Fetch messages, including is_read status
+        messages_query = supabase_client.table("Messages").select("id, content, username, created_at, is_read").eq("conversation_id", conversation_id).order("created_at").execute()
+        messages = messages_query.data if messages_query.data else []
+
+        # Get other user's username
+        other_user_id = conv_query.data['user2_id'] if conv_query.data['user1_id'] == user_uuid else conv_query.data['user1_id']
+        other_user = supabase_client.table("users").select("username").eq("id", other_user_id).single().execute().data['username']
+
+        if request.method == 'POST':
+            content = request.POST.get('message')
+            try:
+                supabase_client.table('Messages').insert({
+                    "conversation_id": str(conversation_id),
+                    "sender_id": user_uuid,
+                    "content": content,
+                    "created_at": datetime.datetime.now().isoformat(),
+                    "username": request.session['username'],
+                    "is_read": False  # Default to unread
+                }).execute()
+                return redirect('dm', conversation_id=conversation_id)
+            except APIError as e:
+                messages.error(request, "Failed to send message")
+
+    except APIError as e:
+        messages.error(request, "Failed to load conversation")
+        return redirect('dm_list')
+
+    return render(request, "api/dm.html", {
+        "conversation_id": conversation_id,
+        "messages": messages,
+        "other_user": other_user
+    })
+
+@supabase_login_required
+def start_dm_view(request):
+    if request.method == 'POST':
+        recipient_email = request.POST.get('recipient_email')
+        user_uuid = request.session['user_uuid']
+        try:
+            # Find recipient by email
+            recipient = supabase_client.table("users").select("id").eq("email", recipient_email).single().execute()
+            if not recipient.data:
+                messages.error(request, "User not found")
+                return redirect('start_dm')
+            
+            recipient_id = recipient.data['id']
+            if recipient_id == user_uuid:
+                messages.error(request, "You cannot DM yourself")
+                return redirect('start_dm')
+
+            # Check if conversation already exists
+            conv_query = supabase_client.table("Conversations").select("id").or_(f"user1_id.eq.{user_uuid},user2_id.eq.{recipient_id}", f"user1_id.eq.{recipient_id},user2_id.eq.{user_uuid}").single().execute()
+            if conv_query.data:
+                return redirect('dm', conversation_id=conv_query.data['id'])
+
+            # Create new conversation
+            new_conv = supabase_client.table("Conversations").insert({
+                "user1_id": user_uuid,
+                "user2_id": recipient_id,
+                "created_at": datetime.datetime.now().isoformat()
+            }).execute()
+            return redirect('dm', conversation_id=new_conv.data[0]['id'])
+
+        except APIError as e:
+            messages.error(request, "Failed to start DM")
+            return redirect('start_dm')
+
+    return render(request, "api/start_dm.html")
