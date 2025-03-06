@@ -43,7 +43,16 @@ def register_view(request):
         
         try:
             # Send registration request to Supabase
-            response = supabase_client.auth.sign_up({"email": email, "password": password, "options":{"data":{"username":username}}})
+            response = (supabase_client.auth.sign_up({
+                "email": email,
+                "password": password,
+                "options":{
+                    "data":{
+                        "username":username,
+
+                     }
+                }
+            }))
             user_data = response.user
 
             if user_data:
@@ -60,7 +69,8 @@ def register_view(request):
                     "last name": last_name,
                     "password": hashed,
                     "gender": gender,
-                    "role": role}).execute()
+                    "role": role
+                }).execute()
 
         except AuthApiError as e:
             messages.error(request, "Failed register attempt")
@@ -94,18 +104,22 @@ def login_view(request):
                 messages.error(request, "Invalid login credentials")
                 return redirect('login')
 
+
             request.session['access_token'] = response.session.access_token
             request.session['refresh_token'] = response.session.refresh_token
             request.session['user_uuid'] = user_data.id
             request.session['username'] = user_data.user_metadata.get('username', user_data.email)
+            request.session['role'] = user_data.user_metadata.get('role', user_data.role)
 
             user_query = supabase_client.table("users").select("role").eq("email", email).single().execute()
             user_role = user_query.data["role"] if user_query.data else None
 
-            if user_role == "admin":
-               return redirect("dashboard-admin")
-            else:
-                return redirect("dashboard")
+
+            return redirect("dashboard-admin")
+            #if user_role == "admin" or "member":
+               #return redirect("dashboard-admin")
+            #else:
+             #   return redirect("dashboard")
 
         except AuthApiError as e:
             if "invalid_grant" in str(e):
@@ -130,13 +144,19 @@ def home_view(request):
 
 @supabase_login_required
 def dashboard_admin_view(request):
+    user_role = request.session.get('role')
+
     try:
         channels_query = supabase_client.table("channels").select("id, name").execute()
         channels = channels_query.data if channels_query.data else []
     except APIError:
         channels = []
 
-    return render(request, "api/dashboard-admin.html", {"user": request.user, "channels": channels})
+    return render(request, "api/dashboard-admin.html", {
+        "user": request.user,
+        "channels": channels,
+        "user_role": user_role
+    })
 
 @supabase_login_required
 def dashboard_view(request):
