@@ -223,6 +223,11 @@ def view_channel(request, channel_id):
 
 @supabase_login_required
 def messages_view(request, channel_id):
+    user_uuid = request.session['user_uuid']
+    member_check = supabase_client.table("channel_members").select("id").eq("user_id", user_uuid).eq("channel_id", channel_id).execute()
+    if not member_check.data:
+        return HttpResponse("Access Denied: You are not a member of this channel", status=403)
+
     if request.method == 'POST':
         content = request.POST.get('message')
         user_uuid = request.session['user_uuid']
@@ -283,3 +288,33 @@ def delete_message(request, message_id):
     return redirect('messages', channel_id=request.POST.get('channel_id'))
 
 
+
+
+def add_member(request, channel_id):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        current_user_uuid = request.session['user_uuid']
+
+        # Fetch the user_id from Supabase using the username
+        user_response = supabase_client.table("users").select("id").eq("username", username).execute()
+
+        if user_response.data is not None and len(user_response.data) > 0:
+            user_id = user_response.data[0]['id']
+            print(str(channel_id))
+            print(request.user.id)
+
+            # Add the user to the channel_members table
+            response = supabase_client.table("channel_members").insert({
+                "user_id": user_id,
+                "channel_id": str(channel_id),
+                "added_by": current_user_uuid
+            }).execute()
+
+            if response.data:
+                return redirect("dashboard-admin")  # Redirect to dashboard
+            else:
+                return HttpResponse("Error adding member", status=400)
+        else:
+            return HttpResponse("User not found", status=404)
+
+    return render(request, "api/add-member.html", {"channel_id": channel_id})
