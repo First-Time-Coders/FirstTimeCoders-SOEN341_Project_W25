@@ -24,11 +24,15 @@
                     <p><strong>{{ message.username }}:</strong> {{ message.message }}</p>
                 </div>
                 <div class="message-settings">
-                    <button class="settings-btn" onclick="toggleDeleteWindow({{ message.id }})">
+                    <button class="settings-btn" onclick="toggleDeleteWindow('{{ message.id }}', this)">
                         <img src="{% static 'icons/settings2.svg' %}" alt="SVG Icon">
                     </button>
                     <div class="delete-window" id="delete-window-{{ message.id }}" style="display: none">
-                        <button type="button {% url 'delete-message' message.id %}" >Delete</button>
+                        <form method="POST" action="{% url 'delete-message' message.id %}" >
+                            {% csrf_token %}
+                            <input type="hidden" name="channel_id" value="{{ channel_id }}">
+                            <button type="submit">Delete</button>
+                        </form>
                     </div>
                 </div>
                 </div>
@@ -48,7 +52,7 @@
     </div>
 
 <script defer>
-    function toggleDeleteWindow(messageId) {
+  function toggleDeleteWindow(messageId, button) {
         // Hide other settings windows
         document.querySelectorAll('.delete-window').forEach(window => {
             if (window.id !== "delete-window-" + messageId) {
@@ -70,15 +74,18 @@
 
         // Position settings window to the right of the button
         deleteWindow.style.position = "absolute";
-        deleteWindow.style.left = `${rect.right + window.scrollX + 10}px`; // Shift right
-        deleteWindow.style.top = `${rect.top + window.scrollY}px`; // Align with button
+        deleteWindow.style.left = `${Math.min(rect.right + window.scrollX + 10, window.innerWidth - deleteWindow.offsetWidth)}px`; // Shift right, ensure within viewport
+        deleteWindow.style.top = `${Math.min(rect.top + window.scrollY, window.innerHeight - deleteWindow.offsetHeight)}px`; // Align with button, ensure within viewport
 
         // Close when clicking outside
-        document.addEventListener("click", function(event) {
+        function handleClickOutside(event) {
             if (!deleteWindow.contains(event.target) && !button.contains(event.target)) {
                 deleteWindow.style.display = "none";
+                document.removeEventListener("click", handleClickOutside);
             }
-        }, { once: true });
+        }
+
+        document.addEventListener("click", handleClickOutside);
     }
 </script>
 

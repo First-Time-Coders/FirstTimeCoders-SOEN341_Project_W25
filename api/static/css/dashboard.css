@@ -236,7 +236,7 @@
     .settings-window {
         display: none; /* Hidden by default */
         position: absolute;
-        background: white;
+        background: #F5F5F5;
         border: 1px solid #ddd;
         box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
         padding: 10px;
