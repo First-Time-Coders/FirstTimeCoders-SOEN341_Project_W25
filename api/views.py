@@ -244,7 +244,7 @@ def delete_message(request, message_id):
         try:
             supabase_client.table('channel_messages').delete().eq('id', message_id).execute()
             messages.success(request, "Message deleted successfully")
-            return redirect('messages', channel_id=request.POST.get('channel_id'))
+            return redirect('messages', channel_id=channel_id)
         except APIError as e:
             messages.error(request, "Failed to delete message")
             return redirect('messages', channel_id=channel_id)

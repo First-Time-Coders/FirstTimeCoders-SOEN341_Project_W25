@@ -147,15 +147,27 @@ body {
 }
 
 .settings-btn{
-    background: #0F3923;
+    background: #F8F8F8;
     border:none;
     padding-left: 4px;
     padding-right: 4px;
     padding-top: 4px;
     padding-bottom: 0px;
     border-radius: 5px;
+    cursor: pointer;
+    border-radius-topright: 5px;
+    border-radius-bottomright: 5px;
     margin-bottom: 10px;
     transition: background 0.3s ease-in-out;
+}
+
+.settings-btn:hover{
+    background: #F5F5F5;
+}
+
+.settings-btn img{
+    width: 28px;
+    height: 28px;
 }
 
 

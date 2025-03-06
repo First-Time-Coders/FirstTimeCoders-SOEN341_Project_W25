@@ -25,7 +25,7 @@
                 </div>
                 <div class="message-settings">
                     <button class="settings-btn" onclick="toggleDeleteWindow('{{ message.id }}', this)">
-                        <img src="{% static 'icons/settings2.svg' %}" alt="SVG Icon">
+                        <img src="{% static 'icons/menu.png' %}" alt="SVG Icon">
                     </button>
                     <div class="delete-window" id="delete-window-{{ message.id }}" style="display: none">
                         <form method="POST" action="{% url 'delete-message' message.id %}" >
