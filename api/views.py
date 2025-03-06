@@ -289,7 +289,7 @@ def delete_message(request, message_id):
 
 
 
-
+@supabase_login_required
 def add_member(request, channel_id):
     if request.method == "POST":
         username = request.POST.get("username")
