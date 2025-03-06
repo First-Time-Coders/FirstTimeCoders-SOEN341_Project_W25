@@ -24,17 +24,23 @@
                     <p><strong>{{ message.username }}:</strong> {{ message.message }}</p>
                 </div>
                 <div class="message-settings">
+                    {% if user_role == "admin" or message.user_id == user_uuid %}
                     <button class="settings-btn" onclick="toggleDeleteWindow('{{ message.id }}', this)">
                         <img src="{% static 'icons/menu.png' %}" alt="SVG Icon">
                     </button>
+
                     <div class="delete-window" id="delete-window-{{ message.id }}" style="display: none">
+
                         <form method="POST" action="{% url 'delete-message' message.id %}" >
                             {% csrf_token %}
                             <input type="hidden" name="channel_id" value="{{ channel_id }}">
                             <button type="submit">Delete</button>
                         </form>
+
                     </div>
+
                 </div>
+                    {% endif %}
                 </div>
             {% empty %}
             <p>It's quiet in here...</p>

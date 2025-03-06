@@ -88,9 +88,11 @@
                             <div class="channel"># {{ channel.name }}</div>
                         </a>
                     <div class="channel-settings">
+                        {% if user_role == 'admin' %}
                         <button class="settings-btn" onclick="toggleSettingsWindow('{{ channel.id }}', this)">
                             <img src="{% static 'icons/settings2.svg' %}" alt="SVG Icon" class="gear-icon">
                         </button>
+                        {% endif %}
                         <div class="settings-window" id="settings-window-{{ channel.id }}" style="display: none;">
                                 <button type="button" onclick="openDeleteModal('{% url 'delete-channel' channel.id %}')">Delete</button>
                         </div>
@@ -102,7 +104,9 @@
 
             </div>
                 <form>
+                    {% if user_role == 'admin' %}
                     <button class="create-channel" formaction="{% url 'create-channel' %}">+ Create a Channel</button>
+                    {% endif %}
                 </form>
         </div>
     </main>
