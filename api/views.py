@@ -260,11 +260,23 @@ def messages_view(request, channel_id):
 def delete_message(request, message_id):
     if request.method == 'POST':
         channel_id = request.POST.get('channel_id')
+        user_uuid = request.session.get('user_uuid')
+        user_role = request.session.get('role')
 
         try:
-            supabase_client.table('channel_messages').delete().eq('id', message_id).execute()
-            messages.success(request, "Message deleted successfully")
-            return redirect('messages', channel_id=request.POST.get('channel_id'))
+            message_query = supabase_client.table("channel_messages").select("id", "user_id").eq("id", message_id).single().execute()
+            message = message_query.data
+
+            if not message:
+                message.error(request, "Message not found")
+                return redirect('messages', channel_id=channel_id)
+
+            if user_role == 'admin' or (user_role == "member" and message["user_id"] == user_uuid):
+                supabase_client.table('channel_messages').delete().eq('id', message_id).execute()
+                messages.success(request, "Message deleted successfully")
+            else:
+                messages.error(request, "You do not have permission to delete this message.")
+
         except APIError as e:
             messages.error(request, "Failed to delete message")
             return redirect('messages', channel_id=channel_id)
