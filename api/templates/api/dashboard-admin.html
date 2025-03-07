@@ -88,7 +88,6 @@
                             <img src="{% static 'icons/settings2.svg' %}" alt="SVG Icon" class="gear-icon">
                         </button>
                         {% endif %}
-                        <p>{{user_role}}</p>
                         <div class="settings-window" id="settings-window-{{ channel.id }}" style="display: none;">
                             <form id="add_member" method="GET" action="{% url 'add-member' channel.id %}">
                                 <button type="submit">Add Member</button>
