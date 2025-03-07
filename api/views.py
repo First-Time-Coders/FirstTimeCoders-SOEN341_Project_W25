@@ -170,17 +170,15 @@ def dashboard_admin_view(request):
             .execute()
         )
 
-        # Extract admin-owned channel IDs
-        admin_channel_ids = [entry["id"] for entry in
-                             admin_channels_query.data] if admin_channels_query.data else []
+        admin_channel_ids = [entry["id"] for entry in admin_channels_query.data] if admin_channels_query.data else []
 
-        # Combine both lists and remove duplicates
+        # Combine both lists to get all relevant channels
         all_channel_ids = list(set(user_channel_ids + admin_channel_ids))
 
         if not all_channel_ids:
-            return render(request, "api/dashboard-admin.html", {"channels": []})  # No channels found
+            return render(request, "api/dashboard-admin.html", {"channels": [], "user_role": user_role})
 
-        # Step 3: Fetch details of the combined channels
+        # Step 3: Fetch full channel details for the selected channels
         channels_query = (
             supabase_client
             .table("channels")
