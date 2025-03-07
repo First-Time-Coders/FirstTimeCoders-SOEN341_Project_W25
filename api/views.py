@@ -113,7 +113,7 @@ def login_view(request):
             user_query = supabase_client.table("users").select("role").eq("email", email).single().execute()
             user_role = user_query.data["role"] if user_query.data else None
 
-            print(user_role)
+
             return redirect("dashboard-admin")
 
         except AuthApiError as e:
