@@ -146,8 +146,51 @@ def dashboard_admin_view(request):
     user_role = request.session.get('role')
 
     try:
-        channels_query = supabase_client.table("channels").select("id, name").execute()
+        user_uuid = request.session.get('user_uuid')
+
+        # Step 1: Get channels where the user is a member
+        user_channels_query = (
+            supabase_client
+            .table("channel_members")
+            .select("channel_id")
+            .eq("user_id", user_uuid)
+            .execute()
+        )
+
+        # Extract the channel IDs
+        user_channel_ids = [entry["channel_id"] for entry in
+                            user_channels_query.data] if user_channels_query.data else []
+
+        # Step 2: Get channels where the user is the creator (admin)
+        admin_channels_query = (
+            supabase_client
+            .table("channels")
+            .select("id")
+            .eq("created_by", user_uuid)
+            .execute()
+        )
+
+        # Extract admin-owned channel IDs
+        admin_channel_ids = [entry["id"] for entry in
+                             admin_channels_query.data] if admin_channels_query.data else []
+
+        # Combine both lists and remove duplicates
+        all_channel_ids = list(set(user_channel_ids + admin_channel_ids))
+
+        if not all_channel_ids:
+            return render(request, "api/dashboard-admin.html", {"channels": []})  # No channels found
+
+        # Step 3: Fetch details of the combined channels
+        channels_query = (
+            supabase_client
+            .table("channels")
+            .select("id, name, created_by")
+            .in_("id", all_channel_ids)
+            .execute()
+        )
+
         channels = channels_query.data if channels_query.data else []
+
     except APIError:
         channels = []
 
@@ -202,6 +245,8 @@ def delete_channel(request, channel_id):
 @supabase_login_required
 def view_channel(request, channel_id):
     try:
+        is_member = supabase_client.table("channel_members").select("id").eq("user_id", request.session['user_uuid']).eq("channel_id", channel_id).execute()
+
         # Fetch the channel details
         channel_query = supabase_client.table("channels").select("name").eq("channel_id", channel_id).single().execute()
         channel = channel_query.data
@@ -225,7 +270,8 @@ def view_channel(request, channel_id):
 def messages_view(request, channel_id):
     user_uuid = request.session['user_uuid']
     member_check = supabase_client.table("channel_members").select("id").eq("user_id", user_uuid).eq("channel_id", channel_id).execute()
-    if not member_check.data:
+    created_by_check = supabase_client.table("channels").select("created_by").eq("id", channel_id).single().execute()
+    if not member_check.data and not created_by_check.data:
         return HttpResponse("Access Denied: You are not a member of this channel", status=403)
 
     if request.method == 'POST':
