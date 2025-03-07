@@ -368,6 +368,10 @@
             background-color: #F5F5F5;
         }
 
+        a{
+            color: #0F3923;
+        }
+
         a:visited {
             color: #0F3923;
         }
