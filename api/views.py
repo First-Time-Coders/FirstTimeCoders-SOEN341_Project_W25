@@ -113,12 +113,8 @@ def login_view(request):
             user_query = supabase_client.table("users").select("role").eq("email", email).single().execute()
             user_role = user_query.data["role"] if user_query.data else None
 
-
+            print(user_role)
             return redirect("dashboard-admin")
-            #if user_role == "admin" or "member":
-               #return redirect("dashboard-admin")
-            #else:
-             #   return redirect("dashboard")
 
         except AuthApiError as e:
             if "invalid_grant" in str(e):
@@ -148,7 +144,6 @@ def dashboard_admin_view(request):
     try:
         user_uuid = request.session.get('user_uuid')
 
-        # Step 1: Get channels where the user is a member
         user_channels_query = (
             supabase_client
             .table("channel_members")
@@ -157,11 +152,9 @@ def dashboard_admin_view(request):
             .execute()
         )
 
-        # Extract the channel IDs
         user_channel_ids = [entry["channel_id"] for entry in
                             user_channels_query.data] if user_channels_query.data else []
 
-        # Step 2: Get channels where the user is the creator (admin)
         admin_channels_query = (
             supabase_client
             .table("channels")
@@ -170,17 +163,14 @@ def dashboard_admin_view(request):
             .execute()
         )
 
-        # Extract admin-owned channel IDs
         admin_channel_ids = [entry["id"] for entry in
                              admin_channels_query.data] if admin_channels_query.data else []
 
-        # Combine both lists and remove duplicates
         all_channel_ids = list(set(user_channel_ids + admin_channel_ids))
 
         if not all_channel_ids:
-            return render(request, "api/dashboard-admin.html", {"channels": []})  # No channels found
+            return render(request, "api/dashboard-admin.html", {"channels": [], "user_role": user_role})  # No channels found
 
-        # Step 3: Fetch details of the combined channels
         channels_query = (
             supabase_client
             .table("channels")

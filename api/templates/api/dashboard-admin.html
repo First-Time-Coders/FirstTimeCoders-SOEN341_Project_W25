@@ -100,11 +100,11 @@
                 <p>No channels yet.</p>
                 {% endfor %}
             </div>
-                <form>
-                    {% if user_role == 'admin' %}
-                    <button class="create-channel" formaction="{% url 'create-channel' %}">+ Create a Channel</button>
-                    {% endif %}
-                </form>
+        {% if user_role == 'admin' %}
+            <form>
+                <button class="create-channel" formaction="{% url 'create-channel' %}">+ Create a Channel</button>
+            </form>
+        {% endif %}
         </div>
     </main>
 
