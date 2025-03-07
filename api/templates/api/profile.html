@@ -1,0 +1,119 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Profile</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+  <script src="https://onpkg.com/htmx.org@1.9.5"></script>
+  <style>
+    .profile-container {
+        max-width: 80%;
+        margin: 50px auto;
+        text-align: left;
+        color: #1e1e2f;
+    }
+    .profile-details {
+        font-size: 18px;
+        display: grid;
+        grid-template-columns: max-content auto;
+        row-gap: 10px;
+        column-gap: 20px;
+        align-items: center;
+    }
+    .profile-details p {
+        background: none;
+        padding: 5px 0;
+        border-radius: 0;
+        margin: 0;
+        font-weight: normal;
+        color: #1e1e2f;
+        display: contents;
+    }
+    .profile-details p strong {
+        color: #006652;
+        font-weight: bold;
+    }
+    .profile-edit-link button {
+        padding: 10px 20px;
+        background-color: #006652;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        margin-top: 20px;
+    }
+    .profile-edit-link button:hover {
+        background-color: #004d40;
+    }
+  </style>
+</head>
+<body>
+<header id="topbar">
+  <div class="top-bar-content">
+    <div class="logo-name">
+      <img src="{% static 'logo/logo.png' %}" style="width: 100px; height: 100px" alt="logo">
+      <span>ChatHaven</span>
+    </div>
+  </div>
+  <div class="logout">
+    <form>
+      <button formaction="{% url 'logout' %}">Logout</button>
+    </form>
+  </div>
+</header>
+<div class="page-container">
+  <nav id="sidebar">
+    <ul>
+      <li>
+        <span class="name-app" style="font-weight: 600; font-size: 20px">Dashboard</span>
+        <button id="toggle-btn">
+          <img src="{% static 'icons/arrowleft-icon.svg' %}" alt="SVG Icon">
+        </button>
+      </li>
+      <li><a href=""><img src="{% static 'icons/home-icon.svg' %}" alt="SVG Icon"><span>Home</span></a></li>
+      <li><a href=""><img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon"><span>Notification</span></a></li>
+      <li><a href=""><img src="{% static 'icons/dm-icon.svg' %}" alt="SVG Icon"><span>Dms</span></a></li>
+      <li class="active"><a href="{% url 'profile' %}"><img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon"><span>Profile</span></a></li>
+    </ul>
+  </nav>
+  <section class="profile-section">
+    <div class="profile-container">
+      <h1>Your Profile</h1>
+      {% if error %}
+      <div class="alert alert-danger">
+        <p>{{ error }}</p>
+      </div>
+      {% else %}
+      <div class="profile-details">
+        <p><strong>First Name:</strong> {{ user.first_name }}</p>
+        <p><strong>Last Name:</strong> {{ user.last_name }}</p>
+        <p><strong>Email:</strong></p> <p>{{ user.email|default:"N/A" }}</p>
+        <p><strong>Username:</strong></p> <p>{{ user.username|default:"N/A" }}</p>
+        <p><strong>Gender:</strong></p> <p>{{ user.gender|default:"N/A" }}</p>
+        <p><strong>Role:</strong></p> <p>{{ user.role|default:"N/A" }}</p>
+        <!-- Age section removed -->
+      </div>
+      <div class="profile-edit-link">
+        <a href="{% url 'edit-profile' %}">
+          <button>Edit Profile</button>
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </section>
+</div>
+<script defer>
+  document.addEventListener("DOMContentLoaded", function() {
+      const toggleButton = document.getElementById('toggle-btn');
+      const sidebar = document.getElementById('sidebar');
+      toggleButton.addEventListener("click", function() {
+          sidebar.classList.toggle('close');
+          toggleButton.classList.toggle('rotate');
+      });
+  });
+</script>
+</body>
+</html>

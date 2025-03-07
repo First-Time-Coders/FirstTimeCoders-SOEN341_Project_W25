@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Edit Profile</title>
+    <script src="https://unpkg.com/htmx.org@1.9.5"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f9f7;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+            width: 360px;
+            text-align: center;
+        }
+
+        h2 {
+            color: #2e8b57;
+            margin-bottom: 15px;
+        }
+
+        .message {
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 12px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        select, input, button {
+            width: 100%;
+            max-width: 280px;
+            padding: 12px;
+            margin-top: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        select, input {
+            background: #f9f9f9;
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        button {
+            background: #2e8b57;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #246d42;
+        }
+
+        .back-link {
+            display: block;
+            margin-top: 15px;
+            color: #2e8b57;
+            text-decoration: none;
+            font-size: 14px;
+            transition: 0.3s;
+        }
+
+        .back-link:hover {
+            color: #1e6b3b;
+        }
+
+        #input-container {
+            display: none;
+            width: 100%;
+        }
+
+        #update-button {
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>Edit Your Profile</h2>
+
+    {% if messages %}
+    <div id="message-container" class="message">
+        {% for message in messages %}
+        <div class="{% if message.tags == 'error' %}error{% else %}success{% endif %}">
+            {{ message }}
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form id="edit-profile-form" method="POST" onsubmit="return validateForm()">
+        {% csrf_token %}
+        <label for="field-select">Select field to edit:</label>
+        <select id="field-select" name="field" required onchange="toggleInputField()">
+            <option value="">-- Choose a field --</option>
+            <option value="first_name">First Name</option>
+            <option value="last_name">Last Name</option>
+            <option value="email">Email</option>
+            <option value="username">Username</option>
+            <option value="gender">Gender</option>
+            <option value="role">Role</option>
+        </select>
+
+        <div id="input-container">
+            <input type="text" id="field-input" placeholder="Enter new value">
+
+            <!-- Gender Dropdown -->
+            <select id="gender-select" style="display:none;">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+                <option value="Other">Other</option>
+            </select>
+
+            <!-- Role Dropdown -->
+            <select id="role-select" style="display:none;">
+                <option value="Admin">Admin</option>
+                <option value="User">User</option>
+            </select>
+
+            <div id="error-message" class="error-message"></div>
+        </div>
+
+        <button type="submit" id="update-button">Update</button>
+    </form>
+
+    <a href="{% url 'profile' %}" class="back-link">← Back to Profile</a>
+</div>
+
+<script>
+    function toggleInputField() {
+        let selectedField = document.getElementById("field-select").value;
+        let inputContainer = document.getElementById("input-container");
+        let textInput = document.getElementById("field-input");
+        let genderSelect = document.getElementById("gender-select");
+        let roleSelect = document.getElementById("role-select");
+        let updateButton = document.getElementById("update-button");
+
+        // Reset display and remove "name" attributes to prevent conflicts
+        textInput.style.display = "none";
+        genderSelect.style.display = "none";
+        roleSelect.style.display = "none";
+        inputContainer.style.display = "none";
+        updateButton.style.display = "none";
+
+        textInput.removeAttribute("name");
+        genderSelect.removeAttribute("name");
+        roleSelect.removeAttribute("name");
+
+        if (selectedField) {
+            inputContainer.style.display = "block";
+            updateButton.style.display = "block";
+
+            if (selectedField === "gender") {
+                genderSelect.style.display = "block";
+                genderSelect.setAttribute("name", "value");
+            } else if (selectedField === "role") {
+                roleSelect.style.display = "block";
+                roleSelect.setAttribute("name", "value");
+            } else {
+                textInput.style.display = "block";
+                textInput.type = "text";
+                textInput.placeholder = "Enter new " + selectedField.replace("_", " ");
+                textInput.setAttribute("name", "value");
+            }
+        }
+    }
+
+    function validateForm() {
+        let selectedField = document.getElementById("field-select").value;
+        let inputValue = document.querySelector("[name='value']").value.trim();
+        let errorMessage = document.getElementById("error-message");
+
+        errorMessage.style.display = "none";
+
+        if (!selectedField || !inputValue) {
+            errorMessage.textContent = "Please select a field and enter a value.";
+            errorMessage.style.display = "block";
+            return false;
+        }
+
+        if (selectedField === "first_name" || selectedField === "last_name") {
+            if (!/^[A-Za-z\s]+$/.test(inputValue)) {
+                errorMessage.textContent = "Name must contain only letters.";
+                errorMessage.style.display = "block";
+                return false;
+            }
+        }
+
+        if (selectedField === "email") {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(inputValue)) {
+                errorMessage.textContent = "Please enter a valid email address.";
+                errorMessage.style.display = "block";
+                return false;
+            }
+        }
+
+        if (selectedField === "username" && /\s/.test(inputValue)) {
+            errorMessage.textContent = "Username should not contain spaces.";
+            errorMessage.style.display = "block";
+            return false;
+        }
+
+        return true;
+    }
+</script>
+
+</body>
+</html>

@@ -24,7 +24,7 @@
     </div>
 </header>
 <div class="page-container">
-<nav id="sidebar">
+    <nav id="sidebar">
         <ul>
             <li>
                 <span class="name-app" style="font-weight: 600; font-size: 20px">Dashboard</span>
@@ -32,12 +32,6 @@
                     <img src="{% static 'icons/arrowleft-icon.svg' %}" alt="SVG Icon">
                 </button>
             </li>
-
-               <!-- <a href="">
-                    <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
-                    <span>Workspace</span>
-                </a>-->
-
 
             <li class="active">
                 <a href="">
@@ -61,50 +55,37 @@
             </li>
 
             <li>
-                <a href="">
+                <a href="{% url 'profile' %}">
                     <img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon">
                     <span>Profile</span>
                 </a>
             </li>
 
             <li class="dropdown">
-
                 <div class="dropdown-menu">
                     <button class="dropdown-btn">
-                    <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
-                    <span>Workspace</span>
-                </button>
-
-                     <ul class="sub-workspace">
-
+                        <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
+                        <span>Workspace</span>
+                    </button>
+                    <ul class="sub-workspace">
                         <li><a href="#"></a>My First Workspace</li>
-
-                </ul>
-
+                    </ul>
                 </div>
-
-
             </li>
-
-
-
         </ul>
-
     </nav>
     <main id="channelbar">
-
         <div class="container-channels">
-
             <div class="workspace-name">My First Workspace</div>
-        <div class="channels">
-            {% for channel in channels %}
-            <a href="{% url 'channel-detail' channel.id %}" class="channel-link">
-                <div class="channel"># {{ channel.name }}</div>
-            </a>
-            {% empty %}
-            <p>No channels yet.</p>
-            {% endfor %}
-        </div>
+            <div class="channels">
+                {% for channel in channels %}
+                <a href="{% url 'channel-detail' channel.id %}" class="channel-link">
+                    <div class="channel"># {{ channel.name }}</div>
+                </a>
+                {% empty %}
+                <p>No channels yet.</p>
+                {% endfor %}
+            </div>
             <div class="channel"># announcements</div>
             <div class="channel"># birthdays</div>
             <div class="channel"># brainstorm</div>
@@ -116,7 +97,6 @@
             <div class="channel"># z_competition</div>
             <div class="channel"># z_conference</div>
     </main>
-
 </div>
 
 <script defer>
@@ -127,13 +107,8 @@
         toggleButton.addEventListener("click", function() {
         sidebar.classList.toggle('close');
         toggleButton.classList.toggle('rotate');
-
          });
-
     });
-
-
-
 </script>
 
 </body>

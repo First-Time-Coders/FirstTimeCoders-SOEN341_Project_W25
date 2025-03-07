@@ -21,7 +21,7 @@
 
 </header>
 <div class="page-container">
-<nav id="sidebar">
+    <nav id="sidebar">
         <ul>
             <li>
                 <span class="name-app" style="font-weight: 600; font-size: 20px">Dashboard</span>
@@ -30,10 +30,10 @@
                 </button>
             </li>
 
-               <!-- <a href="">
-                    <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
-                    <span>Workspace</span>
-                </a>-->
+            <!-- <a href="">
+                 <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
+                 <span>Workspace</span>
+             </a>-->
 
 
             <li class="active">
@@ -57,8 +57,9 @@
                 </a>
             </li>
 
+            <!-- Profile Link -->
             <li>
-                <a href="">
+                <a href="{% url 'profile' %}">
                     <img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon">
                     <span>Profile</span>
                 </a>
@@ -83,10 +84,10 @@
             <div class="workspace-name">My First Workspace</div>
             <div class="channels">
                 {% for channel in channels %}
-                    <div class="channel-item" id="channel-{{ channel.id }}">
-                        <a href="{% url 'messages' channel.id %}" class="channel-link">
-                            <div class="channel"># {{ channel.name }}</div>
-                        </a>
+                <div class="channel-item" id="channel-{{ channel.id }}">
+                    <a href="{% url 'messages' channel.id %}" class="channel-link">
+                        <div class="channel"># {{ channel.name }}</div>
+                    </a>
                     <div class="channel-settings">
                         <button id="settings-btn" onclick="toggleDropdown('{{ channel.id }}')">
                             <img src="{% static 'icons/settings2.svg' %}" alt="SVG Icon">
@@ -98,24 +99,24 @@
                             </form>
                         </div>
                     </div>
-                    </div>
+                </div>
                 {% empty %}
                 <p>No channels yet.</p>
                 {% endfor %}
 
             </div>
-                <form>
-                    <button class="create-channel" formaction="{% url 'create-channel' %}">+ Create a Channel</button>
-                </form>
+            <form>
+                <button class="create-channel" formaction="{% url 'create-channel' %}">+ Create a Channel</button>
+            </form>
         </div>
     </main>
 
 </div>
 
 
- <div class="channel-info-container">
-            <h1 id="channel-name">Channel Info</h1>
- </div>
+<div class="channel-info-container">
+    <h1 id="channel-name">Channel Info</h1>
+</div>
 
 <script defer>
     document.addEventListener("DOMContentLoaded", function() {
