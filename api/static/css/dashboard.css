@@ -246,7 +246,8 @@
     }
 
     .settings-window form {
-        margin: 0;
+        margin-bottom: 5px;
+
     }
 
     .settings-window button {
@@ -265,6 +266,26 @@
         color: #F5F5F5;
     }
 
+    .settings-window .create button:hover {
+        background: #0F3923;
+        color: #F5F5F5;
+    }
+
+    .settings-window form button:hover{
+        background: #0F3923;
+        color: #F5F5F5;
+    }
+
+    .settings-window form button{
+        background: #F5F5F5;
+        color: #0F3923;
+        border: none;
+        padding: 8px 12px;
+        cursor: pointer;
+        width: 100%;
+        border-radius: 5px;
+        transition: background 0.3s ease;
+    }
 
     .modal-overlay {
     position: fixed;

@@ -47,7 +47,7 @@ button{
     margin-left: 2vw;
     font-size: 2vw;
     img{
-        width: 30vw;
+        width: 8vw;
     }
     transform: translateY(-0.5vh);
     transition: transform 0.3s ease-in-out;

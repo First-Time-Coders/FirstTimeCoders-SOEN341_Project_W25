@@ -89,10 +89,10 @@
                         </button>
                         {% endif %}
                         <div class="settings-window" id="settings-window-{{ channel.id }}" style="display: none;">
-                                <button type="button" onclick="openDeleteModal('{% url 'delete-channel' channel.id %}')">Delete</button>
-                            <form method="GET" action="{% url 'add-member' channel.id %}">
+                            <form id="add_member" method="GET" action="{% url 'add-member' channel.id %}">
                                 <button type="submit">Add Member</button>
                             </form>
+                            <button type="button" onclick="openDeleteModal('{% url 'delete-channel' channel.id %}')">Delete</button>
                         </div>
                     </div>
                     </div>
