@@ -11,13 +11,17 @@ on:
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.8, 3.9, 3.10]
+    timeout-minutes: 10
     services:
       postgres:
         image: postgres:latest
         env:
-          POSTGRES_DB: test_db
-          POSTGRES_USER: test_user
-          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+          POSTGRES_USER: ${{ secrets.POSTGRES_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         ports:
           - 5432:5432
 
@@ -25,10 +29,18 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Set up Python
+    - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v4
       with:
-        python-version: '3.10'
+        python-version: ${{ matrix.python-version }}
+
+    - name: Cache pip
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
 
     - name: Install dependencies
       run: |
@@ -41,48 +53,6 @@ jobs:
 
     - name: Run tests
       env:
-        DATABASE_URL: postgresql://test_user:test_password@localhost:5432/test_db
+        DATABASE_URL: postgresql://${{ secrets.POSTGRES_USER }}:${{ secrets.POSTGRES_PASSWORD }}@localhost:5432/${{ secrets.POSTGRES_DB }}
       run: |
         python manage.py test
-
-    - name: Generate test cases
-      run: |
-        cat <<EOF > api/tests.py
-        from django.test import TestCase
-        from django.contrib.auth.models import User
-
-        class APITestCase(TestCase):
-            def test_account_creation(self):
-                response = self.client.post('/api/register/', {"username": "testuser", "password": "password123"})
-                self.assertEqual(response.status_code, 201)
-
-            def test_channel_creation(self):
-                user = User.objects.create_user(username='testuser', password='password123')
-                self.client.login(username='testuser', password='password123')
-                response = self.client.post('/api/create-channel/', {"name": "testchannel"})
-                self.assertEqual(response.status_code, 201)
-
-            def test_chat_message(self):
-                user = User.objects.create_user(username='testuser', password='password123')
-                self.client.login(username='testuser', password='password123')
-                response = self.client.post('/api/send-message/', {"channel": "testchannel", "message": "Hello!"})
-                self.assertEqual(response.status_code, 200)
-
-            def test_message_deletion(self):
-                user = User.objects.create_user(username='testuser', password='password123')
-                self.client.login(username='testuser', password='password123')
-                response = self.client.delete('/api/delete-message/', {"message_id": 1})
-                self.assertEqual(response.status_code, 204)
-
-            def test_channel_deletion(self):
-                user = User.objects.create_user(username='testuser', password='password123')
-                self.client.login(username='testuser', password='password123')
-                response = self.client.delete('/api/delete-channel/', {"channel_id": 1})
-                self.assertEqual(response.status_code, 204)
-
-            def test_member_addition(self):
-                user = User.objects.create_user(username='testuser', password='password123')
-                self.client.login(username='testuser', password='password123')
-                response = self.client.post('/api/add-member/', {"channel_id": 1, "username": "newuser"})
-                self.assertEqual(response.status_code, 200)
-        EOF
