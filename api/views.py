@@ -182,13 +182,18 @@ def dashboard_admin_view(request):
 
         channels = channels_query.data if channels_query.data else []
 
+        users_query = supabase_client.table("users").select("id, username").neq("id", "user_uuid").execute()
+        users = users_query.data if users_query.data else []
+
     except APIError:
         channels = []
+        users = []
 
     return render(request, "api/dashboard-admin.html", {
         "user": request.user,
         "channels": channels,
-        "user_role": user_role
+        "user_role": user_role,
+        "users": users
     })
 
 @supabase_login_required
@@ -355,3 +360,4 @@ def add_member(request, channel_id):
             return HttpResponse("User not found", status=404)
 
     return render(request, "api/add-member.html", {"channel_id": channel_id})
+

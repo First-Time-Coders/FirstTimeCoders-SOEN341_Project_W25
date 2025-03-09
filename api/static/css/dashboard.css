@@ -399,6 +399,24 @@
         }
 
 
-.channel-info-container {
+.info-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: start;
+    gap: 10px;
+    padding-top: 50px;
+    background-color: #F5F5F5;
+    border-radius: 5px;
 
+}
+
+.user-info-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    gap: 10px;
+    padding: 5px 1em;
+    background-color: #F5F5F5;
+    width: 250px;
 }
