@@ -116,9 +116,15 @@
         <h1 id="channel-name">Channel Info</h1>
     </div>
     <div class="user-info-container">
-        <h1 id="users-header">Users</h1>
-
-
+        <div class="users" style="font-weight: 600; font-size: 20px">Users</div>
+        <div class="users-list">
+            {% for user in users %}
+                <div class="user-item" id="user-"{{ user.id }}>
+                    <button class="user-name">{{ user.username }}</button>
+                </div>
+            {% empty %}
+                <p>No users yet.</p>
+            {% endfor %}
     </div>
 </div>
 

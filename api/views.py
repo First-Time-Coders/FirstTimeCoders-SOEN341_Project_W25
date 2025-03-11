@@ -169,11 +169,11 @@ def dashboard_admin_view(request):
 
         all_channel_ids = list(set(user_channel_ids + admin_channel_ids))
 
-        users_query = supabase_client.table("users").select("id, username").neq("id", "user_uuid").execute()
+        users_query = supabase_client.table("users").select("id, username").neq("id", user_uuid).execute()
         users = users_query.data if users_query.data else []
 
         if not all_channel_ids:
-            return render(request, "api/dashboard-admin.html", {"user": request.user, "channels": [], "user_role": user_role, "users": users})  # No channels found
+            return render(request, "api/dashboard-admin.html", {"channels": [], "user_role": user_role, "users": users})  # No channels found
 
         channels_query = (
             supabase_client
