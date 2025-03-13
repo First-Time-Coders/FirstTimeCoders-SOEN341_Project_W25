@@ -114,7 +114,6 @@ def login_view(request):
             user_query = supabase_client.table("users").select("role").eq("email", email).single().execute()
             user_role = user_query.data["role"] if user_query.data else None
 
-
             return redirect("dashboard-admin")
 
         except AuthApiError as e:
@@ -128,6 +127,11 @@ def login_view(request):
 
 def logout_view(request):
     try:
+        user_id = request.session.get('user_uuid')
+
+        if user_id:
+            supabase_client.from_("user_activity").update({"status": "offline"}).eq("user_id", user_id).execute()
+
         supabase_client.auth.sign_out()
     except AuthApiError as e:
         messages.error(request, "Failed to sign out")
@@ -144,6 +148,15 @@ def dashboard_admin_view(request):
 
     try:
         user_uuid = request.session.get('user_uuid')
+
+        now = datetime.datetime.now().isoformat()
+        user_id = request.session['user_uuid']
+
+        print(request.session['user_uuid'])
+
+        response = supabase_client.from_("user_activity").upsert(
+            {"user_id": user_id, "status": "online", "last_seen": now, "updated_at": now},
+        ).execute()
 
         user_channels_query = (
             supabase_client
@@ -190,7 +203,7 @@ def dashboard_admin_view(request):
         users = []
 
     return render(request, "api/dashboard-admin.html", {
-        "user": request.user,
+        "user_id": user_id,
         "channels": channels,
         "user_role": user_role,
         "users": users
