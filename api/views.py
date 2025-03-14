@@ -328,22 +328,29 @@ def start_dm_view(request):
     if request.method == 'POST':
         recipient_email = request.POST.get('recipient_email')
         user_uuid = request.session['user_uuid']
+        print(f"Recipient Email: {recipient_email}, User UUID: {user_uuid}")  # Debug: Check form data and user
+
         try:
             # Find recipient by email
             recipient = supabase_client.table("users").select("id").eq("email", recipient_email).single().execute()
+            print(f"Recipient Query Result: {recipient.data}")  # Debug: Check if recipient is found
             if not recipient.data:
                 messages.error(request, "User not found")
                 return redirect('start_dm')
             
             recipient_id = recipient.data['id']
+            print(f"Recipient ID: {recipient_id}")  # Debug: Check recipient ID
             if recipient_id == user_uuid:
                 messages.error(request, "You cannot DM yourself")
                 return redirect('start_dm')
 
             # Check if conversation already exists
             conv_query = supabase_client.table("Conversations").select("id").or_(f"user1_id.eq.{user_uuid},user2_id.eq.{recipient_id}", f"user1_id.eq.{recipient_id},user2_id.eq.{user_uuid}").single().execute()
+            print(f"Conversation Query Result: {conv_query.data}")  # Debug: Check if conversation exists
             if conv_query.data:
-                return redirect('dm', conversation_id=conv_query.data['id'])
+                conversation_id = conv_query.data['id']
+                print(f"Existing Conversation ID: {conversation_id}")  # Debug: Check existing conversation ID
+                return redirect('dm', conversation_id=conversation_id)
 
             # Create new conversation
             new_conv = supabase_client.table("Conversations").insert({
@@ -351,9 +358,13 @@ def start_dm_view(request):
                 "user2_id": recipient_id,
                 "created_at": datetime.datetime.now().isoformat()
             }).execute()
-            return redirect('dm', conversation_id=new_conv.data[0]['id'])
+            print(f"New Conversation Result: {new_conv.data}")  # Debug: Check new conversation data
+            conversation_id = new_conv.data[0]['id']
+            print(f"New Conversation ID: {conversation_id}")  # Debug: Check new conversation ID
+            return redirect('dm', conversation_id=conversation_id)
 
         except APIError as e:
+            print(f"APIError: {str(e)}")  # Debug: Log the error
             messages.error(request, "Failed to start DM")
             return redirect('start_dm')
 

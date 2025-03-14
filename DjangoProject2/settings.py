@@ -62,7 +62,7 @@ ROOT_URLCONF = 'DjangoProject2.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, "api", "templates")],  # Fixes template path issue
+        'DIRS': [BASE_DIR.parent / "templates"],  # Adjusted to project root
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
