@@ -192,9 +192,6 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-
-
-
 }
 
  .container-channels {
@@ -369,6 +366,10 @@
             width: 200px;
             transition: background 0.3s ease;
             background-color: #F5F5F5;
+        }
+
+        a{
+            color: #0F3923;
         }
 
         a:visited {
