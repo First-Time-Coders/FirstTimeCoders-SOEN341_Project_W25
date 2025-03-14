@@ -62,7 +62,7 @@ ROOT_URLCONF = 'DjangoProject2.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ["api/templates"],
+        'DIRS': [os.path.join(BASE_DIR, "api", "templates")],  # Fixes template path issue
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -74,6 +74,7 @@ TEMPLATES = [
         },
     },
 ]
+
 
 WSGI_APPLICATION = 'DjangoProject2.wsgi.application'
 

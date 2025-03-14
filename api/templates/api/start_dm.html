@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h2>Start a DM</h2>
+    <form method="post">
+        {% csrf_token %}
+        <input type="email" name="recipient_email" placeholder="Enter recipient email" required>
+        <button type="submit">Start DM</button>
+    </form>
+{% endblock %}
