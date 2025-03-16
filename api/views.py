@@ -266,7 +266,9 @@ def dm_list_view(request):
     user_uuid = request.session['user_uuid']
     try:
         # Fetch conversations where the user is either user1 or user2
-        conversations = supabase_client.table("Conversations").select("id, user1_id, user2_id").or_(f"user1_id.eq.{user_uuid},user2_id.eq.{user_uuid}").execute()
+        conversations = supabase_client.table("Conversations Table").select("id, user1_id, user2_id").or_(
+            f"user1_id.eq.{user_uuid},user2_id.eq.{user_uuid}"
+        ).execute()
         dm_list = []
         for conv in conversations.data:
             other_user_id = conv['user2_id'] if conv['user1_id'] == user_uuid else conv['user1_id']
@@ -286,12 +288,12 @@ def dm_view(request, conversation_id):
     user_uuid = request.session['user_uuid']
     try:
         # Verify user is part of this conversation
-        conv_query = supabase_client.table("Conversations").select("user1_id, user2_id").eq("id", conversation_id).single().execute()
+        conv_query = supabase_client.table("Conversations Table").select("user1_id, user2_id").eq("id", conversation_id).single().execute()
         if not conv_query.data or (user_uuid not in [conv_query.data['user1_id'], conv_query.data['user2_id']]):
             return HttpResponse("Unauthorized or conversation not found", status=403)
 
         # Fetch messages, including is_read status
-        messages_query = supabase_client.table("Messages").select("id, content, username, created_at, is_read").eq("conversation_id", conversation_id).order("created_at").execute()
+        messages_query = supabase_client.table("Messages Table").select("id, content, username, created_at, is_read").eq("conversation_id", conversation_id).order("created_at").execute()
         messages = messages_query.data if messages_query.data else []
 
         # Get other user's username
@@ -301,7 +303,7 @@ def dm_view(request, conversation_id):
         if request.method == 'POST':
             content = request.POST.get('message')
             try:
-                supabase_client.table('Messages').insert({
+                supabase_client.table('Messages Table').insert({
                     "conversation_id": str(conversation_id),
                     "sender_id": user_uuid,
                     "content": content,
@@ -328,44 +330,53 @@ def start_dm_view(request):
     if request.method == 'POST':
         recipient_email = request.POST.get('recipient_email')
         user_uuid = request.session['user_uuid']
-        print(f"Recipient Email: {recipient_email}, User UUID: {user_uuid}")  # Debug: Check form data and user
-
+        print(f"DEBUG: Starting DM process - Recipient Email: {recipient_email}, User UUID: {user_uuid}")
+        
         try:
-            # Find recipient by email
+            print(f"DEBUG: Querying users table for {recipient_email}")
             recipient = supabase_client.table("users").select("id").eq("email", recipient_email).single().execute()
-            print(f"Recipient Query Result: {recipient.data}")  # Debug: Check if recipient is found
+            print(f"DEBUG: Recipient Query Result: {recipient.data}")
             if not recipient.data:
                 messages.error(request, "User not found")
+                print(f"DEBUG: User not found for email: {recipient_email}")
                 return redirect('start_dm')
-            
             recipient_id = recipient.data['id']
-            print(f"Recipient ID: {recipient_id}")  # Debug: Check recipient ID
+            print(f"DEBUG: Recipient ID: {recipient_id}")
             if recipient_id == user_uuid:
                 messages.error(request, "You cannot DM yourself")
+                print(f"DEBUG: Self-DM attempt detected")
                 return redirect('start_dm')
-
-            # Check if conversation already exists
-            conv_query = supabase_client.table("Conversations").select("id").or_(f"user1_id.eq.{user_uuid},user2_id.eq.{recipient_id}", f"user1_id.eq.{recipient_id},user2_id.eq.{user_uuid}").single().execute()
-            print(f"Conversation Query Result: {conv_query.data}")  # Debug: Check if conversation exists
+            
+            print(f"DEBUG: Querying Conversations Table for users {user_uuid} and {recipient_id}")
+            # Use a string-based or_ condition
+            conv_query = supabase_client.table("Conversations Table").select("id").or_(
+                f"user1_id.eq.{user_uuid},user2_id.eq.{recipient_id},and(user1_id.eq.{recipient_id},user2_id.eq.{user_uuid})"
+            ).single().execute()
+            print(f"DEBUG: Conversation Query Result: {conv_query.data}")
             if conv_query.data:
                 conversation_id = conv_query.data['id']
-                print(f"Existing Conversation ID: {conversation_id}")  # Debug: Check existing conversation ID
+                print(f"DEBUG: Found existing Conversation ID: {conversation_id}")
                 return redirect('dm', conversation_id=conversation_id)
-
-            # Create new conversation
-            new_conv = supabase_client.table("Conversations").insert({
+            
+            print(f"DEBUG: Creating new conversation with user1_id: {user_uuid}, user2_id: {recipient_id}")
+            new_conv = supabase_client.table("Conversations Table").insert({
                 "user1_id": user_uuid,
                 "user2_id": recipient_id,
-                "created_at": datetime.datetime.now().isoformat()
+                "created_at": datetime.now().isoformat()
             }).execute()
-            print(f"New Conversation Result: {new_conv.data}")  # Debug: Check new conversation data
+            print(f"DEBUG: New Conversation Result: {new_conv.data}")
+            if not new_conv.data or len(new_conv.data) == 0:
+                raise APIError("No data returned from conversation insert")
             conversation_id = new_conv.data[0]['id']
-            print(f"New Conversation ID: {conversation_id}")  # Debug: Check new conversation ID
+            print(f"DEBUG: New Conversation ID: {conversation_id}")
             return redirect('dm', conversation_id=conversation_id)
-
+        
         except APIError as e:
-            print(f"APIError: {str(e)}")  # Debug: Log the error
-            messages.error(request, "Failed to start DM")
+            print(f"DEBUG: APIError occurred: {str(e)} - Full error details: {e}")
+            messages.error(request, f"Failed to start DM: {str(e)}")
             return redirect('start_dm')
-
+        except Exception as e:
+            print(f"DEBUG: Unexpected error: {str(e)}")
+            messages.error(request, f"Unexpected error: {str(e)}")
+            return redirect('start_dm')
     return render(request, "api/start_dm.html")
