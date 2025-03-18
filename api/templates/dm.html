@@ -9,6 +9,14 @@
     <script src="https://unpkg.com/htmx.org@1.9.5"></script> <!-- Optional: For real-time updates -->
 </head>
 <body>
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+   
     <div class="chat-container">
         <div class="channel-header">
             <h1 id="channel-name">DM with {{ other_user }}</h1>

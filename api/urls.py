@@ -15,7 +15,7 @@ urlpatterns = [
     path('delete-channel/<uuid:channel_id>/', delete_channel, name='delete-channel'),
     path('delete-message/<uuid:message_id>/', delete_message, name='delete-message'),
     path('dm/list/', dm_list_view, name='dm_list'),
-    path('dm/<uuid:conversation_id>/', dm_view, name='dm'),
+    path('dm/<str:conversation_id>/', dm_view, name='dm'),
     path('dm/start/', start_dm_view, name='start_dm'),
 
 ]

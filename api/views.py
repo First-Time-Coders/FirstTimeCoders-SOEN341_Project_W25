@@ -1,7 +1,7 @@
-import datetime
+from datetime import datetime
 from http.client import responses
 from msilib.schema import CustomAction
-
+from django.contrib import messages  # Django's messaging framework
 import bcrypt
 import uuid
 import supabase
@@ -220,12 +220,11 @@ def messages_view(request, channel_id):
         username = request.session['username']
 
         print("inserting in db")
-        #create a try-catch if there's an issue
         response = supabase_client.table('channel_messages').insert({
             "user_id": user_uuid,
             "channel_id": str(channel_id),
             "message": content,
-            "created_at": datetime.datetime.now().isoformat(),
+            "created_at": datetime.now().isoformat(),  # Updated here
             "username": username
         }).execute()
 
@@ -233,7 +232,6 @@ def messages_view(request, channel_id):
 
         return redirect('messages', channel_id=channel_id)
 
-#used to fetch messages from a channel
     message = supabase_client.table('channel_messages').select('message, username, id').eq('channel_id', channel_id).execute()
 
     channel = supabase_client.table('channels').select('name').eq('id', channel_id).single().execute()
@@ -286,44 +284,52 @@ def dm_list_view(request):
 @supabase_login_required
 def dm_view(request, conversation_id):
     user_uuid = request.session['user_uuid']
+    print(f"DEBUG: Opening conversation with ID: {conversation_id}")
+    
     try:
-        # Verify user is part of this conversation
+        print(f"DEBUG: Fetching conversation details from Supabase")
         conv_query = supabase_client.table("Conversations Table").select("user1_id, user2_id").eq("id", conversation_id).single().execute()
-        if not conv_query.data or (user_uuid not in [conv_query.data['user1_id'], conv_query.data['user2_id']]):
-            return HttpResponse("Unauthorized or conversation not found", status=403)
+        print(f"DEBUG: Conversation query result: {conv_query.data}")
+        
+        if not conv_query.data:
+            print(f"DEBUG: No conversation found with ID: {conversation_id}")
+            messages.error(request, f"Conversation not found with ID: {conversation_id}")
+            return redirect('dm_list')
+            
+        if user_uuid not in [conv_query.data['user1_id'], conv_query.data['user2_id']]:
+            print(f"DEBUG: User not authorized for this conversation")
+            messages.error(request, "You're not authorized to view this conversation")
+            return redirect('dm_list')
 
-        # Fetch messages, including is_read status
+        print(f"DEBUG: Fetching messages for conversation")
+        message_list = []
         messages_query = supabase_client.table("Messages Table").select("id, content, username, created_at, is_read").eq("conversation_id", conversation_id).order("created_at").execute()
-        messages = messages_query.data if messages_query.data else []
+        print(f"DEBUG: Messages query result: {messages_query.data}")
+        message_list = messages_query.data if messages_query.data else []
 
-        # Get other user's username
+        print(f"DEBUG: Determining other user")
         other_user_id = conv_query.data['user2_id'] if conv_query.data['user1_id'] == user_uuid else conv_query.data['user1_id']
-        other_user = supabase_client.table("users").select("username").eq("id", other_user_id).single().execute().data['username']
+        print(f"DEBUG: Other user ID: {other_user_id}")
+        
+        other_user_query = supabase_client.table("users").select("username").eq("id", other_user_id).single().execute()
+        print(f"DEBUG: Other user query result: {other_user_query.data}")
+        
+        if not other_user_query.data:
+            other_user = "Unknown User"
+        else:
+            other_user = other_user_query.data['username']
+        
+        print(f"DEBUG: Rendering template with {len(message_list)} messages")
+        return render(request, "api/dm.html", {
+            "conversation_id": conversation_id,
+            "messages": message_list,
+            "other_user": other_user
+        })
 
-        if request.method == 'POST':
-            content = request.POST.get('message')
-            try:
-                supabase_client.table('Messages Table').insert({
-                    "conversation_id": str(conversation_id),
-                    "sender_id": user_uuid,
-                    "content": content,
-                    "created_at": datetime.datetime.now().isoformat(),
-                    "username": request.session['username'],
-                    "is_read": False  # Default to unread
-                }).execute()
-                return redirect('dm', conversation_id=conversation_id)
-            except APIError as e:
-                messages.error(request, "Failed to send message")
-
-    except APIError as e:
-        messages.error(request, "Failed to load conversation")
+    except Exception as e:
+        print(f"DEBUG: Exception in dm_view: {str(e)}")
+        messages.error(request, f"Error loading conversation: {str(e)}")
         return redirect('dm_list')
-
-    return render(request, "api/dm.html", {
-        "conversation_id": conversation_id,
-        "messages": messages,
-        "other_user": other_user
-    })
 
 @supabase_login_required
 def start_dm_view(request):
@@ -348,16 +354,18 @@ def start_dm_view(request):
                 return redirect('start_dm')
             
             print(f"DEBUG: Querying Conversations Table for users {user_uuid} and {recipient_id}")
-            # Use a string-based or_ condition
             conv_query = supabase_client.table("Conversations Table").select("id").or_(
-                f"user1_id.eq.{user_uuid},user2_id.eq.{recipient_id},and(user1_id.eq.{recipient_id},user2_id.eq.{user_uuid})"
-            ).single().execute()
+                f"and(user1_id.eq.{user_uuid},user2_id.eq.{recipient_id}),and(user1_id.eq.{recipient_id},user2_id.eq.{user_uuid})"
+            ).execute()
             print(f"DEBUG: Conversation Query Result: {conv_query.data}")
-            if conv_query.data:
-                conversation_id = conv_query.data['id']
+            
+            # Check if a conversation exists
+            if conv_query.data and len(conv_query.data) > 0:
+                conversation_id = conv_query.data[0]['id']
                 print(f"DEBUG: Found existing Conversation ID: {conversation_id}")
                 return redirect('dm', conversation_id=conversation_id)
             
+            # If no conversation exists, create a new one
             print(f"DEBUG: Creating new conversation with user1_id: {user_uuid}, user2_id: {recipient_id}")
             new_conv = supabase_client.table("Conversations Table").insert({
                 "user1_id": user_uuid,
