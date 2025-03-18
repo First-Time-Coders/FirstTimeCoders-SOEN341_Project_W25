@@ -24,7 +24,11 @@
         <div class="message-container" id="message-container">
             {% for message in chat_messages %}
                 <div class="message{% if not message.is_read %} unread{% endif %}">
-                    <p><strong>{{ message.username }}:</strong> {{ message.content }} <span>{{ message.created_at }}</span></p>
+                    <p>
+                        <strong>{{ message.username }}:</strong> 
+                        {{ message.content }} 
+                        <span class="timestamp">{{ message.created_at|date:"M d, g:i A" }}</span>
+                    </p>
                 </div>
             {% empty %}
                 <p>Start the conversation!</p>
