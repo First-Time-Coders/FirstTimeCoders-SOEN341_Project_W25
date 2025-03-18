@@ -316,8 +316,12 @@ def dm_view(request, conversation_id):
         # Process POST request (sending a message)
         if request.method == 'POST':
             content = request.POST.get('message')
+            quoted_message_id = request.POST.get('quoted_message_id')
+            quoted_author = request.POST.get('quoted_author')
+            quoted_content = request.POST.get('quoted_content')
+            
             try:
-                # Create message data with only the fields from your schema
+                # Create message data with quote information if present
                 message_data = {
                     "conversation_id": conversation_id,
                     "sender_id": user_uuid,
@@ -326,7 +330,13 @@ def dm_view(request, conversation_id):
                     "is_read": False
                 }
                 
-                # Insert with only the fields that exist in the database
+                # Add quote data if replying to a message
+                if quoted_message_id:
+                    message_data["quoted_message_id"] = quoted_message_id
+                    message_data["quoted_author"] = quoted_author
+                    message_data["quoted_content"] = quoted_content
+                
+                # Insert with the fields that exist in the database
                 supabase_client.table('Messages Table').insert(message_data).execute()
                 return redirect('dm', conversation_id=conversation_id)
             except Exception as send_error:
