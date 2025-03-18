@@ -46,9 +46,92 @@
         .back-link:hover {
             text-decoration: underline;
         }
+
+        /* Emoji picker styles */
+        .emoji-picker {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .emoji-button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px;
+            color: #888;
+            transition: color 0.3s;
+        }
+        
+        .emoji-button:hover {
+            color: #0F3923;
+            background: none !important;
+        }
+        
+        .emoji-popup {
+            display: none;
+            position: absolute;
+            bottom: 45px;
+            right: 0;
+            width: 250px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            padding: 10px;
+            z-index: 1000;
+        }
+        
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        
+        .emoji {
+            font-size: 20px;
+            cursor: pointer;
+            text-align: center;
+            padding: 5px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+        
+        .emoji:hover {
+            background-color: #f1f1f1;
+        }
+        
+        /* Message input with emoji button */
+        .message-input-container {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            margin-right: 10px;
+            flex-grow: 1;
+        }
+        
+        .message-input-container input {
+            border: none;
+            margin: 0;
+            flex-grow: 1;
+        }
+        
+        .message-input-container input:focus {
+            outline: none;
+        }
     </style>
 </head>
 <body>
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+            <div class="alert">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="chat-container">
         <a href="{% url 'dm_list' %}" class="back-link">← Back to Direct Messages</a>
         <div class="channel-header">
@@ -74,7 +157,37 @@
         <div class="message-input">
             <form method="POST">
                 {% csrf_token %}
-                <input type="text" name="message" placeholder="Type your message..." autocomplete="off">
+                <div class="message-input-container">
+                    <input type="text" name="message" id="message-input" placeholder="Type your message..." autocomplete="off">
+                    <div class="emoji-picker">
+                        <button type="button" class="emoji-button" onclick="toggleEmojiPicker()">😊</button>
+                        <div class="emoji-popup" id="emoji-popup">
+                            <div class="emoji-grid">
+                                <div class="emoji" onclick="addEmoji('😊')">😊</div>
+                                <div class="emoji" onclick="addEmoji('😂')">😂</div>
+                                <div class="emoji" onclick="addEmoji('😍')">😍</div>
+                                <div class="emoji" onclick="addEmoji('🤔')">🤔</div>
+                                <div class="emoji" onclick="addEmoji('😎')">😎</div>
+                                <div class="emoji" onclick="addEmoji('👍')">👍</div>
+                                <div class="emoji" onclick="addEmoji('❤️')">❤️</div>
+                                <div class="emoji" onclick="addEmoji('😁')">😁</div>
+                                <div class="emoji" onclick="addEmoji('😉')">😉</div>
+                                <div class="emoji" onclick="addEmoji('🎉')">🎉</div>
+                                <div class="emoji" onclick="addEmoji('🔥')">🔥</div>
+                                <div class="emoji" onclick="addEmoji('😀')">😀</div>
+                                <div class="emoji" onclick="addEmoji('👋')">👋</div>
+                                <div class="emoji" onclick="addEmoji('👏')">👏</div>
+                                <div class="emoji" onclick="addEmoji('🙏')">🙏</div>
+                                <div class="emoji" onclick="addEmoji('💯')">💯</div>
+                                <div class="emoji" onclick="addEmoji('🤣')">🤣</div>
+                                <div class="emoji" onclick="addEmoji('😅')">😅</div>
+                                <div class="emoji" onclick="addEmoji('🥰')">🥰</div>
+                                <div class="emoji" onclick="addEmoji('😇')">😇</div>
+                                <div class="emoji" onclick="addEmoji('😜')">😜</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <button type="submit">Send</button>
             </form>
         </div>
@@ -86,6 +199,35 @@
             const messageContainer = document.getElementById('message-container');
             messageContainer.scrollTop = messageContainer.scrollHeight;
         });
+        
+        // Emoji picker functionality
+        function toggleEmojiPicker() {
+            const picker = document.getElementById('emoji-popup');
+            picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
+            
+            // Close emoji picker when clicking outside
+            if (picker.style.display === 'block') {
+                document.addEventListener('click', closeEmojiPickerOutside);
+            } else {
+                document.removeEventListener('click', closeEmojiPickerOutside);
+            }
+        }
+        
+        function closeEmojiPickerOutside(event) {
+            const picker = document.getElementById('emoji-popup');
+            const button = document.querySelector('.emoji-button');
+            
+            if (!picker.contains(event.target) && event.target !== button) {
+                picker.style.display = 'none';
+                document.removeEventListener('click', closeEmojiPickerOutside);
+            }
+        }
+        
+        function addEmoji(emoji) {
+            const input = document.getElementById('message-input');
+            input.value += emoji;
+            input.focus();
+        }
     </script>
 </body>
 </html>
