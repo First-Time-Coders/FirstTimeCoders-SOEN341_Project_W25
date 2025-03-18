@@ -5,28 +5,65 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DM with {{ other_user }}</title>
-    <link rel="stylesheet" href="{% static 'css/messages.css' %}">
-    <script src="https://unpkg.com/htmx.org@1.9.5"></script>
+    <link rel="stylesheet" href="{% static 'css/message.css' %}">
+    <style>
+        /* Status styles */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-online { background-color: #4CAF50; }
+        .status-away { background-color: #FFC107; }
+        .status-offline { background-color: #9E9E9E; }
+        
+        /* Message bubble styles */
+        .sent-message {
+            background-color: #E3F2FD;
+            margin-left: auto;
+            max-width: 70%;
+            text-align: right;
+        }
+        .received-message {
+            background-color: #F5F5F5;
+            margin-right: auto;
+            max-width: 70%;
+        }
+        .user-status {
+            font-size: 14px;
+            color: #888;
+            margin-left: 10px;
+            font-weight: normal;
+        }
+        .back-link {
+            display: inline-block;
+            margin-bottom: 15px;
+            color: #0F3923;
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    {% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-            <div class="alert">{{ message }}</div>
-        {% endfor %}
-    </div>
-    {% endif %}
-   
     <div class="chat-container">
+        <a href="{% url 'dm_list' %}" class="back-link">← Back to Direct Messages</a>
         <div class="channel-header">
-            <h1 id="channel-name">DM with {{ other_user }}</h1>
+            <h1 id="channel-name">
+                <span class="status-indicator status-online"></span>
+                {{ other_user }}
+                <span class="user-status">Online</span>
+            </h1>
         </div>
         <div class="message-container" id="message-container">
             {% for message in chat_messages %}
-                <div class="message{% if not message.is_read %} unread{% endif %}">
+                <div class="message {% if message.sender_id == request.session.user_uuid %}sent-message{% else %}received-message{% endif %}">
                     <p>
                         <strong>{{ message.username }}:</strong> 
-                        {{ message.content }} 
+                        {{ message.content }}
                         <span class="timestamp">{{ message.created_at|date:"M d, g:i A" }}</span>
                     </p>
                 </div>
@@ -37,10 +74,18 @@
         <div class="message-input">
             <form method="POST">
                 {% csrf_token %}
-                <input type="text" name="message" placeholder="Type your message...">
+                <input type="text" name="message" placeholder="Type your message..." autocomplete="off">
                 <button type="submit">Send</button>
             </form>
         </div>
     </div>
+
+    <script>
+        // Auto-scroll to bottom of messages on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageContainer = document.getElementById('message-container');
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        });
+    </script>
 </body>
 </html>
