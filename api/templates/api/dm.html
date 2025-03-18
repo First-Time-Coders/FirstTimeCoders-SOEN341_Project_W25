@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DM with {{ other_user }}</title>
     <link rel="stylesheet" href="{% static 'css/messages.css' %}">
-    <script src="https://unpkg.com/htmx.org@1.9.5"></script> <!-- Optional: For real-time updates -->
+    <script src="https://unpkg.com/htmx.org@1.9.5"></script>
 </head>
 <body>
     {% if messages %}
@@ -22,7 +22,7 @@
             <h1 id="channel-name">DM with {{ other_user }}</h1>
         </div>
         <div class="message-container" id="message-container">
-            {% for message in messages %}
+            {% for message in chat_messages %}
                 <div class="message{% if not message.is_read %} unread{% endif %}">
                     <p><strong>{{ message.username }}:</strong> {{ message.content }} <span>{{ message.created_at }}</span></p>
                 </div>
