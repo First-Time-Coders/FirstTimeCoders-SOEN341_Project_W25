@@ -149,15 +149,6 @@ def dashboard_admin_view(request):
     try:
         user_uuid = request.session.get('user_uuid')
 
-        now = datetime.datetime.now().isoformat()
-        user_id = request.session['user_uuid']
-
-        print(request.session['user_uuid'])
-
-        response = supabase_client.from_("user_activity").upsert(
-            {"user_id": user_id, "status": "online", "last_seen": now, "updated_at": now},
-        ).execute()
-
         user_channels_query = (
             supabase_client
             .table("channel_members")
@@ -203,7 +194,7 @@ def dashboard_admin_view(request):
         users = []
 
     return render(request, "api/dashboard-admin.html", {
-        "user_id": user_id,
+        "user_id": user_uuid,
         "channels": channels,
         "user_role": user_role,
         "users": users
