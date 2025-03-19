@@ -195,7 +195,6 @@ def dashboard_admin_view(request):
 
         # Fetch all channels
         all_channels = supabase_client.table("channels").select("id, name, created_by").execute().data
-
         joinable_channels = [ch for ch in all_channels if ch["id"] not in user_channel_ids and ch["created_by"] != user_uuid]
 
     except APIError:
@@ -205,8 +204,31 @@ def dashboard_admin_view(request):
         "user": request.user,
         "channels": channels,
         "user_role": user_role,
-        "joinable_channels": joinable_channels
+        "joinable_channels": joinable_channels,
     })
+
+def notification_view(request):
+    try:
+        user_uuid = request.session.get('user_uuid')
+
+        # Fetch channels created by admin:
+        admin_channels = supabase_client.table("channels").select("id").eq("created_by", user_uuid).execute().data
+        admin_channel_ids = [c["id"] for c in admin_channels]
+
+        # Get pending requests directed to the creator:
+        pending_requests = supabase_client.table("channels_requests") \
+            .select("id, channel_id, user_id, requested_at, status, user:user_id(username), channel:channel_id(name)") \
+            .in_("channel_id", admin_channel_ids) \
+            .eq("status", "pending") \
+            .execute().data
+
+        return render(request, "api/notifications.html", {
+            "user": request.user,
+            "pending_requests": pending_requests
+        })
+
+    except APIError:
+        channels = []
 
 @supabase_login_required
 def dashboard_view(request):
@@ -385,15 +407,37 @@ def leave_channel(request, channel_id):
             # Prevents leaving general channels
             channel = supabase_client.table("channels").select("name").eq("id", channel_id).single().execute()
             if channel.data and channel.data['name'].startswith("GENERAL-"):
-                messages.error(request, "You cannot leave general channels.")
                 return redirect('dashboard-admin')
 
             supabase_client.table("channel_members").delete().eq("user_id", user_uuid).eq("channel_id", channel_id).execute()
-            messages.success(request, "You left the channel successfully.")
         except APIError:
             messages.error(request, "Error leaving the channel.")
 
     return redirect('dashboard-admin')
 
 def request_join_channel(request, channel_id):
+    if request.method == 'POST':
+        user_uuid = request.session['user_uuid']
+
+        supabase_client.table("channels_requests").insert({
+            "user_id": user_uuid,
+            "channel_id": str(channel_id),
+            "status": "pending",
+        }).execute()
     return redirect('dashboard-admin')
+
+def approve_request(request, request_id):
+    # Automatically add user to channel_members
+    user_uuid = request.session['user_uuid']
+    req = supabase_client.table("channels_requests").select("channel_id, user_id").eq("id", str(request_id)).single().execute().data
+    supabase_client.table("channel_members").insert({
+        "channel_id": req["channel_id"],
+        "user_id": req["user_id"],
+        "added_by": user_uuid
+    }).execute()
+    supabase_client.table("channels_requests").delete().eq("id", str(request_id)).execute()
+    return redirect('notifications')
+
+def reject_request(request, request_id):
+    supabase_client.table("channels_requests").delete().eq("id", str(request_id)).execute()
+    return redirect('notifications')

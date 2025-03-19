@@ -41,7 +41,7 @@
                 </a>
             </li>
             <li>
-                <a href="">
+                <a href="{% url 'notifications' %}">
                     <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon">
                     <span>Notification</span>
                 </a>
@@ -73,9 +73,9 @@
             </div>
         </ul>
     </nav>
-    <main id="channelbar">
-        <div class="container-channels">
-            <div class="workspace-name">My Channels</div>
+    <main id="channelbar ">
+        <div class="container-channels" style= "padding-right: 190px; border-left: 1px solid #ccc;">
+            <div class="workspace-name" >My Channels</div>
             <div class="channels">
                 {% for channel in channels %}
                     <div class="channel-item" id="channel-{{ channel.id }}">
@@ -112,7 +112,7 @@
         </div>
     </main>
 
-    <div class="container-channels" style="border-left: 1px solid #ccc; padding-left: 20px;">
+    <div class="container-channels" style= "padding-left: 10px; border-left: 1px solid #ccc;">
         <div class="workspace-name">Joinable Channels</div>
         <div class="channels">
             {% for channel in joinable_channels %}
