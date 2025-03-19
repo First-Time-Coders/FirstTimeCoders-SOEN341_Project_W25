@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Your Direct Messages</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <style>
+        /* Status indicator styles */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+        .status-online { background-color: #4CAF50; }
+        .status-away { background-color: #FFC107; }
+        .status-offline { background-color: #9E9E9E; }
+        .last-seen {
+            font-size: 0.7em;
+            color: #888;
+            margin-left: 8px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <header id="topbar">
+        <div class="top-bar-content">
+            <div class="logo-name">
+                <img src="{% static 'logo/pixelcut-export.png' %}" style="width: 100px; height: 45px" alt="logo">
+                <span>ChatHaven</span>
+            </div>
+        </div>
+    </header>
+    <div class="page-container">
+        <nav id="sidebar">
+            <ul>
+                <li>
+                    <span class="name-app" style="font-weight: 600; font-size: 20px">Dashboard</span>
+                    <button id="toggle-btn">
+                        <img src="{% static 'icons/arrowleft-icon.svg' %}" alt="SVG Icon">
+                    </button>
+                </li>
+                <li><a href="{% url 'dashboard' %}"><img src="{% static 'icons/home-icon.svg' %}" alt="Home"><span>Home</span></a></li>
+                <li class="active"><a href="{% url 'dm_list' %}"><img src="{% static 'icons/dm-icon.svg' %}" alt="DMs"><span>DMs</span></a></li>
+                <li><form><button id="logout-button" formaction="{% url 'logout' %}">Logout</button></form></li>
+            </ul>
+        </nav>
+        <main id="channelbar">
+            <div class="container-channels">
+                <div class="workspace-name">Your Direct Messages</div>
+                <div class="channels">
+                    {% for dm in dm_list %}
+                        <a href="{% url 'dm' dm.conversation_id %}" class="channel-link">
+                            <div class="channel">
+                                <span class="status-indicator status-online"></span>
+                                {{ dm.other_user }}
+                            </div>
+                        </a>
+                    {% empty %}
+                        <p>No DMs yet. Start one below!</p>
+                    {% endfor %}
+                </div>
+                <form action="{% url 'start_dm' %}">
+                    <button class="create-channel">+ Start a DM</button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const toggleButton = document.getElementById('toggle-btn');
+            const sidebar = document.getElementById('sidebar');
+
+            toggleButton.addEventListener("click", function() {
+                sidebar.classList.toggle('close');
+                toggleButton.classList.toggle('rotate');
+            });
+        });
+    </script>
+</body>
+</html>

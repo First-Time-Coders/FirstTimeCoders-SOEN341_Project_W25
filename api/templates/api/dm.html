@@ -1,0 +1,345 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>DM with {{ other_user }}</title>
+    <link rel="stylesheet" href="{% static 'css/message.css' %}">
+    <style>
+        /* Existing styles */
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-online { background-color: #4CAF50; }
+        .status-away { background-color: #FFC107; }
+        .status-offline { background-color: #9E9E9E; }
+        
+        .sent-message {
+            background-color: #E3F2FD;
+            margin-left: auto;
+            max-width: 70%;
+            text-align: right;
+        }
+        .received-message {
+            background-color: #F5F5F5;
+            margin-right: auto;
+            max-width: 70%;
+        }
+        
+        /* Reply functionality styles */
+        .message-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 4px;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .message:hover .message-actions {
+            opacity: 1;
+        }
+        
+        .reply-button {
+            background: none;
+            border: none;
+            color: #0F3923;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 5px;
+        }
+        
+        .reply-button:hover {
+            text-decoration: underline;
+        }
+        
+        .quote-container {
+            display: none;
+            margin-bottom: 10px;
+            padding: 8px 10px;
+            background-color: #f1f1f1;
+            border-left: 3px solid #0F3923;
+            border-radius: 3px;
+            position: relative;
+        }
+        
+        .quote-author {
+            font-weight: bold;
+            color: #0F3923;
+            margin-bottom: 2px;
+        }
+        
+        .quote-content {
+            font-size: 13px;
+            color: #555;
+        }
+        
+        .close-quote {
+            position: absolute;
+            top: 2px;
+            right: 5px;
+            cursor: pointer;
+            color: #888;
+            font-size: 16px;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+        
+        .message-quote {
+            border-left: 3px solid #0F3923;
+            padding: 5px 8px;
+            margin-bottom: 5px;
+            background-color: rgba(0,0,0,0.05);
+            border-radius: 3px;
+            font-size: 12px;
+        }
+        
+        .quoted-author {
+            font-weight: bold;
+            color: #0F3923;
+        }
+        
+        /* Emoji picker styles */
+        .emoji-picker {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .emoji-button {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 5px 10px;
+            color: #888;
+            transition: color 0.3s;
+        }
+        
+        .emoji-button:hover {
+            color: #0F3923;
+            background: none !important;
+        }
+        
+        .emoji-popup {
+            display: none;
+            position: absolute;
+            bottom: 45px;
+            right: 0;
+            width: 250px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            padding: 10px;
+            z-index: 1000;
+        }
+        
+        .emoji-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 5px;
+        }
+        
+        .emoji {
+            font-size: 20px;
+            cursor: pointer;
+            text-align: center;
+            padding: 5px;
+            border-radius: 3px;
+            transition: background-color 0.2s;
+        }
+        
+        .emoji:hover {
+            background-color: #f1f1f1;
+        }
+        
+        .message-input-container {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            margin-right: 10px;
+            flex-grow: 1;
+        }
+        
+        .message-input-container input {
+            border: none;
+            margin: 0;
+            flex-grow: 1;
+        }
+        
+        .message-input-container input:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <a href="{% url 'dm_list' %}" class="back-link">← Back to Direct Messages</a>
+        <div class="channel-header">
+            <h1 id="channel-name">
+                <span class="status-indicator status-online"></span>
+                {{ other_user }}
+                <span class="user-status">Online</span>
+            </h1>
+        </div>
+        <div class="message-container" id="message-container">
+            {% for message in chat_messages %}
+    <div class="message {% if message.sender_id == request.session.user_uuid %}sent-message{% else %}received-message{% endif %}" id="message-{{ message.id }}">
+        {% if message.quoted_message_id and message.quoted_author and message.quoted_content %}
+            <div class="message-quote">
+                <div class="quoted-author">{{ message.quoted_author }}</div>
+                <div class="quoted-content">{{ message.quoted_content }}</div>
+            </div>
+        {% endif %}
+        <p>
+            <strong>{{ message.username }}:</strong> 
+            {{ message.content }}
+            <span class="timestamp">{{ message.created_at|date:"M d, g:i A" }}</span>
+        </p>
+        <div class="message-actions">
+            <button class="reply-button" onclick="replyToMessage('{{ message.id }}', '{{ message.username }}', '{{ message.content }}')">
+                Reply
+            </button>
+        </div>
+    </div>
+{% empty %}
+    <p>Start the conversation!</p>
+{% endfor %}
+        </div>
+        <div class="message-input">
+            <div id="quote-container" class="quote-container">
+                <button class="close-quote" onclick="cancelReply()">×</button>
+                <div class="quote-author" id="quote-author"></div>
+                <div class="quote-content" id="quote-content"></div>
+                <input type="hidden" id="quoted-message-id" name="quoted_message_id">
+            </div>
+            <form method="POST" id="message-form">
+                {% csrf_token %}
+                <div class="message-input-container">
+                    <input type="text" name="message" id="message-input" placeholder="Type your message..." autocomplete="off">
+                    <div class="emoji-picker">
+                        <button type="button" class="emoji-button" onclick="toggleEmojiPicker()">😊</button>
+                        <div class="emoji-popup" id="emoji-popup">
+                            <div class="emoji-grid">
+                                <div class="emoji" onclick="addEmoji('😊')">😊</div>
+                                <div class="emoji" onclick="addEmoji('😂')">😂</div>
+                                <div class="emoji" onclick="addEmoji('😍')">😍</div>
+                                <div class="emoji" onclick="addEmoji('🤔')">🤔</div>
+                                <div class="emoji" onclick="addEmoji('😎')">😎</div>
+                                <div class="emoji" onclick="addEmoji('👍')">👍</div>
+                                <div class="emoji" onclick="addEmoji('❤️')">❤️</div>
+                                <div class="emoji" onclick="addEmoji('😁')">😁</div>
+                                <div class="emoji" onclick="addEmoji('😉')">😉</div>
+                                <div class="emoji" onclick="addEmoji('🎉')">🎉</div>
+                                <div class="emoji" onclick="addEmoji('🔥')">🔥</div>
+                                <div class="emoji" onclick="addEmoji('😀')">😀</div>
+                                <div class="emoji" onclick="addEmoji('👋')">👋</div>
+                                <div class="emoji" onclick="addEmoji('👏')">👏</div>
+                                <div class="emoji" onclick="addEmoji('🙏')">🙏</div>
+                                <div class="emoji" onclick="addEmoji('💯')">💯</div>
+                                <div class="emoji" onclick="addEmoji('🤣')">🤣</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <button type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Auto-scroll to bottom of messages on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageContainer = document.getElementById('message-container');
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        });
+        
+        // Reply functionality
+        function replyToMessage(messageId, username, content) {
+            // Truncate long messages in the quote display
+            const truncatedContent = content.length > 60 ? content.substring(0, 60) + '...' : content;
+            
+            // Show quote container
+            document.getElementById('quote-container').style.display = 'block';
+            document.getElementById('quote-author').textContent = username;
+            document.getElementById('quote-content').textContent = truncatedContent;
+            document.getElementById('quoted-message-id').value = messageId;
+            
+            // Focus input field
+            document.getElementById('message-input').focus();
+        }
+        
+        function cancelReply() {
+            document.getElementById('quote-container').style.display = 'none';
+            document.getElementById('quoted-message-id').value = '';
+        }
+        
+        // Add hidden inputs for quoted message when form is submitted
+        document.getElementById('message-form').addEventListener('submit', function(e) {
+            const quotedMessageId = document.getElementById('quoted-message-id').value;
+            
+            if (quotedMessageId) {
+                // If replying to a message, add the quoted info to the form
+                const quoteAuthorEl = document.getElementById('quote-author');
+                const quoteContentEl = document.getElementById('quote-content');
+                
+                const authorInput = document.createElement('input');
+                authorInput.type = 'hidden';
+                authorInput.name = 'quoted_author';
+                authorInput.value = quoteAuthorEl.textContent;
+                
+                const contentInput = document.createElement('input');
+                contentInput.type = 'hidden';
+                contentInput.name = 'quoted_content';
+                contentInput.value = quoteContentEl.textContent;
+                
+                const messageIdInput = document.createElement('input');
+                messageIdInput.type = 'hidden';
+                messageIdInput.name = 'quoted_message_id';
+                messageIdInput.value = quotedMessageId;
+                
+                this.appendChild(authorInput);
+                this.appendChild(contentInput);
+                this.appendChild(messageIdInput);
+            }
+        });
+        
+        // Emoji picker functionality
+        function toggleEmojiPicker() {
+            const picker = document.getElementById('emoji-popup');
+            picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
+            
+            // Close emoji picker when clicking outside
+            if (picker.style.display === 'block') {
+                document.addEventListener('click', closeEmojiPickerOutside);
+            } else {
+                document.removeEventListener('click', closeEmojiPickerOutside);
+            }
+        }
+        
+        function closeEmojiPickerOutside(event) {
+            const picker = document.getElementById('emoji-popup');
+            const button = document.querySelector('.emoji-button');
+            
+            if (!picker.contains(event.target) && event.target !== button) {
+                picker.style.display = 'none';
+                document.removeEventListener('click', closeEmojiPickerOutside);
+            }
+        }
+        
+        function addEmoji(emoji) {
+            const input = document.getElementById('message-input');
+            input.value += emoji;
+            input.focus();
+        }
+    </script>
+</body>
+</html>

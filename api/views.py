@@ -3,6 +3,7 @@ from http.client import responses
 from msilib.schema import CustomAction
 
 
+from datetime import datetime
 import bcrypt
 import uuid
 import supabase
@@ -202,7 +203,6 @@ def dashboard_admin_view(request):
 
 @supabase_login_required
 def dashboard_view(request):
-
     return render(request, 'api/dashboard.html', {'user': request.user})
 
 @supabase_login_required
@@ -333,7 +333,163 @@ def delete_message(request, message_id):
 
     return redirect('messages', channel_id=request.POST.get('channel_id'))
 
+@supabase_login_required
+def dm_list_view(request):
+    user_uuid = request.session['user_uuid']
+    try:
+        # Fetch conversations where the user is either user1 or user2
+        conversations = supabase_client.table("Conversations Table").select("id, user1_id, user2_id").or_(
+            f"user1_id.eq.{user_uuid},user2_id.eq.{user_uuid}"
+        ).execute()
+        dm_list = []
+        for conv in conversations.data:
+            other_user_id = conv['user2_id'] if conv['user1_id'] == user_uuid else conv['user1_id']
+            user_query = supabase_client.table("users").select("username").eq("id", other_user_id).single().execute()
+            dm_list.append({
+                "conversation_id": conv['id'],
+                "other_user": user_query.data['username'] if user_query.data else "Unknown"
+            })
+    except APIError as e:
+        messages.error(request, "Failed to load DMs")
+        dm_list = []
 
+    return render(request, "api/dm_list.html", {"dm_list": dm_list})
+
+@supabase_login_required
+def dm_view(request, conversation_id):
+    user_uuid = request.session['user_uuid']
+
+    try:
+        # Fetch conversation data
+        conv_data = supabase_client.table("Conversations Table").select("*").eq("id", conversation_id).execute()
+
+        if not conv_data.data or len(conv_data.data) == 0:
+            return HttpResponse(f"No conversation found with ID: {conversation_id}. <a href='/api/dm/list/'>Back to DMs</a>")
+
+        # Use first result if multiple found
+        conv_record = conv_data.data[0] if isinstance(conv_data.data, list) else conv_data.data
+
+        if user_uuid not in [conv_record.get('user1_id'), conv_record.get('user2_id')]:
+            return HttpResponse("Not authorized to view this conversation. <a href='/api/dm/list/'>Back to DMs</a>")
+
+        # Get messages
+        base_messages = []
+        msg_data = supabase_client.table("Messages Table").select("*").eq("conversation_id", conversation_id).execute()
+        base_messages = msg_data.data if msg_data.data else []
+
+        # Enrich messages with usernames
+        chat_messages = []
+        for message in base_messages:
+            sender_id = message.get('sender_id')
+            sender_query = supabase_client.table("users").select("username").eq("id", sender_id).single().execute()
+            sender_name = sender_query.data.get('username', "Unknown") if sender_query.data else "Unknown"
+
+            # Add username to message object for display
+            message['username'] = sender_name
+            chat_messages.append(message)
+
+        # Get other user info
+        other_user_id = conv_record.get('user2_id') if conv_record.get('user1_id') == user_uuid else conv_record.get('user1_id')
+        user_data = supabase_client.table("users").select("username").eq("id", other_user_id).execute()
+        other_user = user_data.data[0].get('username', "Unknown") if user_data.data else "Unknown User"
+
+        # Process POST request (sending a message)
+        if request.method == 'POST':
+            content = request.POST.get('message')
+            quoted_message_id = request.POST.get('quoted_message_id')
+            quoted_author = request.POST.get('quoted_author')
+            quoted_content = request.POST.get('quoted_content')
+
+            try:
+                # Create message data with quote information if present
+                message_data = {
+                    "conversation_id": conversation_id,
+                    "sender_id": user_uuid,
+                    "content": content,
+                    "created_at": datetime.now().isoformat(),
+                    "is_read": False
+                }
+
+                # Add quote data if replying to a message
+                if quoted_message_id:
+                    message_data["quoted_message_id"] = quoted_message_id
+                    message_data["quoted_author"] = quoted_author
+                    message_data["quoted_content"] = quoted_content
+
+                # Insert with the fields that exist in the database
+                supabase_client.table('Messages Table').insert(message_data).execute()
+                return redirect('dm', conversation_id=conversation_id)
+            except Exception as send_error:
+                print(f"DEBUG: Error sending message: {str(send_error)}")
+                return HttpResponse(f"Failed to send message: {str(send_error)}")
+
+        return render(request, "api/dm.html", {
+            "conversation_id": conversation_id,
+            "chat_messages": chat_messages,
+            "other_user": other_user
+        })
+
+    except Exception as e:
+        print(f"DEBUG: Exception in dm_view: {str(e)}")
+        return HttpResponse(f"Error: {str(e)}. <a href='/api/dm/list/'>Back to DMs</a>")
+
+@supabase_login_required
+def start_dm_view(request):
+    if request.method == 'POST':
+        recipient_email = request.POST.get('recipient_email')
+        user_uuid = request.session['user_uuid']
+        print(f"DEBUG: Starting DM process - Recipient Email: {recipient_email}, User UUID: {user_uuid}")
+
+        try:
+            print(f"DEBUG: Querying users table for {recipient_email}")
+            recipient = supabase_client.table("users").select("id").eq("email", recipient_email).single().execute()
+            print(f"DEBUG: Recipient Query Result: {recipient.data}")
+            if not recipient.data:
+                messages.error(request, "User not found")
+                print(f"DEBUG: User not found for email: {recipient_email}")
+                return redirect('start_dm')
+            recipient_id = recipient.data['id']
+            print(f"DEBUG: Recipient ID: {recipient_id}")
+            if recipient_id == user_uuid:
+                messages.error(request, "You cannot DM yourself")
+                print(f"DEBUG: Self-DM attempt detected")
+                return redirect('start_dm')
+
+            print(f"DEBUG: Querying Conversations Table for users {user_uuid} and {recipient_id}")
+            conv_query = supabase_client.table("Conversations Table").select("id").or_(
+                f"and(user1_id.eq.{user_uuid},user2_id.eq.{recipient_id}),and(user1_id.eq.{recipient_id},user2_id.eq.{user_uuid})"
+            ).execute()
+            print(f"DEBUG: Conversation Query Result: {conv_query.data}")
+
+            # Check if a conversation exists
+            if conv_query.data and len(conv_query.data) > 0:
+                conversation_id = conv_query.data[0]['id']
+                print(f"DEBUG: Found existing Conversation ID: {conversation_id}")
+                return redirect('dm', conversation_id=conversation_id)
+
+            # If no conversation exists, create a new one
+            print(f"DEBUG: Creating new conversation with user1_id: {user_uuid}, user2_id: {recipient_id}")
+            new_conv = supabase_client.table("Conversations Table").insert({
+                "user1_id": user_uuid,
+                "user2_id": recipient_id,
+                "created_at": datetime.now().isoformat()
+            }).execute()
+            print(f"DEBUG: New Conversation Result: {new_conv.data}")
+            if not new_conv.data or len(new_conv.data) == 0:
+                raise APIError("No data returned from conversation insert")
+            conversation_id = new_conv.data[0]['id']
+            print(f"DEBUG: New Conversation ID: {conversation_id}")
+            return redirect('dm', conversation_id=conversation_id)
+
+        except APIError as e:
+            print(f"DEBUG: APIError occurred: {str(e)} - Full error details: {e}")
+            messages.error(request, f"Failed to start DM: {str(e)}")
+            return redirect('start_dm')
+        except Exception as e:
+            print(f"DEBUG: Unexpected error: {str(e)}")
+            messages.error(request, f"Unexpected error: {str(e)}")
+            return redirect('start_dm')
+    return render(request, "api/start_dm.html")
 
 @supabase_login_required
 def add_member(request, channel_id):

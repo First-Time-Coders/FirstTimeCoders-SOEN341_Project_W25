@@ -161,6 +161,11 @@ body {
     transition: background 0.3s ease-in-out;
 }
 
+.timestamp {
+    font-size: 0.8em;
+    color: #888;
+    margin-left: 8px;
+}
 .settings-btn:hover{
     background: #F5F5F5;
 }

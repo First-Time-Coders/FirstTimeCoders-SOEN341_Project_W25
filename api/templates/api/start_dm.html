@@ -1,0 +1,38 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Start a DM</title>
+    <link rel="stylesheet" href="{% static 'css/create_channel.css' %}">
+</head>
+<body>
+    <div class="header">
+        <h1>Start a Direct Message</h1>
+    </div>
+
+    <div class="container">
+        <div class="create-box">
+            <div class="create-message">
+                <p>Enter the email of the user you want to message</p>
+            </div>
+
+            {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <form id="start-dm-form" method="POST">
+                {% csrf_token %}
+                <input type="email" placeholder="User Email" id="recipient_email" name="recipient_email" required>
+                <button type="submit">Start Conversation</button>
+            </form>
+            <a href="{% url 'dm_list' %}">Back to DMs</a>
+        </div>
+    </div>
+</body>
+</html>
