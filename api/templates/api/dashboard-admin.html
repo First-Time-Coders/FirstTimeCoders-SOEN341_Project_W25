@@ -41,8 +41,8 @@
                 </a>
             </li>
             <li>
-                <a href="{% url 'notifications' %}">
-                    <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon">
+                <a href="{% url 'notifications' %}" class="{% if pending_requests|length > 0 %}has-pending{% endif %}">
+                    <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon" class="notification-icon">
                     <span>Notification</span>
                 </a>
             </li>

@@ -197,6 +197,12 @@ def dashboard_admin_view(request):
         all_channels = supabase_client.table("channels").select("id, name, created_by").execute().data
         joinable_channels = [ch for ch in all_channels if ch["id"] not in user_channel_ids and ch["created_by"] != user_uuid]
 
+        pending_requests = supabase_client.table("channels_requests") \
+            .select("id, channel_id, user_id, requested_at, status, user:user_id(username), channel:channel_id(name)") \
+            .in_("channel_id", admin_channel_ids) \
+            .eq("status", "pending") \
+            .execute().data
+
     except APIError:
         channels = []
 
@@ -205,6 +211,7 @@ def dashboard_admin_view(request):
         "channels": channels,
         "user_role": user_role,
         "joinable_channels": joinable_channels,
+        "pending_requests": pending_requests
     })
 
 def notification_view(request):
