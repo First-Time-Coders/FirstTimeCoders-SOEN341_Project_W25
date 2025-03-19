@@ -92,7 +92,11 @@
                             <form id="add_member" method="GET" action="{% url 'add-member' channel.id %}">
                                 <button type="submit">Add Member</button>
                             </form>
-                            <button type="button" onclick="openDeleteModal('{% url 'delete-channel' channel.id %}')">Delete</button>
+                            <form action="{% url 'leave-channel' channel.id %}" method="post" onsubmit="return confirm('Are you sure you want to leave this channel?');">
+                                {% csrf_token %}
+                                <button type="submit">Leave Channel</button>
+                            </form>
+                            <button type="button" onclick="openDeleteModal('{% url 'delete-channel' channel.id %}')">Delete Channel</button>
                         </div>
                     </div>
                     </div>

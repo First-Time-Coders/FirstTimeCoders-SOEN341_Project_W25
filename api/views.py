@@ -166,7 +166,19 @@ def dashboard_admin_view(request):
         admin_channel_ids = [entry["id"] for entry in
                              admin_channels_query.data] if admin_channels_query.data else []
 
-        all_channel_ids = list(set(user_channel_ids + admin_channel_ids))
+
+        #Fetch all general channels
+        general_channels_query = (
+            supabase_client
+                .table("channels")
+                .select("id")
+                .like("name", "GENERAL-%")
+                .execute()
+        )
+
+        general_channel_ids = [entry["id"] for entry in general_channels_query.data] if general_channels_query.data else []
+
+        all_channel_ids = list(set(user_channel_ids + admin_channel_ids + general_channel_ids))
 
         if not all_channel_ids:
             return render(request, "api/dashboard-admin.html", {"channels": [], "user_role": user_role})  # No channels found
@@ -222,6 +234,11 @@ def create_channel(request):
 def delete_channel(request, channel_id):
     if request.method == 'POST':
         try:
+            channel = supabase_client.table("channels").select("name").eq("id", channel_id).single().execute()
+            if channel.data and channel.data['name'].startswith("GENERAL-"):
+                messages.error(request, "General channels cannot be deleted.")
+                return redirect('dashboard-admin')
+
             supabase_client.table('channels').delete().eq('id', channel_id).execute()
             messages.success(request, "Channel deleted successfully")
             return redirect('dashboard-admin')
@@ -354,3 +371,20 @@ def add_member(request, channel_id):
             return HttpResponse("User not found", status=404)
 
     return render(request, "api/add-member.html", {"channel_id": channel_id})
+
+def leave_channel(request, channel_id):
+    if request.method == 'POST':
+        user_uuid = request.session['user_uuid']
+        try:
+            # Prevents leaving general channels
+            channel = supabase_client.table("channels").select("name").eq("id", channel_id).single().execute()
+            if channel.data and channel.data['name'].startswith("GENERAL-"):
+                messages.error(request, "You cannot leave general channels.")
+                return redirect('dashboard-admin')
+
+            supabase_client.table("channel_members").delete().eq("user_id", user_uuid).eq("channel_id", channel_id).execute()
+            messages.success(request, "You left the channel successfully.")
+        except APIError:
+            messages.error(request, "Error leaving the channel.")
+
+    return redirect('dashboard-admin')
