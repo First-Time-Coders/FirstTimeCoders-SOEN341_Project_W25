@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import register_view, dashboard_view, login_view, logout_view, home_view, dashboard_admin_view, \
-    create_channel, view_channel, messages_view, delete_channel, add_member, delete_message, leave_channel
+    create_channel, view_channel, messages_view, delete_channel, add_member, delete_message, leave_channel, \
+    request_join_channel
 
 urlpatterns = [
     path('register/', register_view, name='register'),
@@ -16,5 +17,6 @@ urlpatterns = [
     path('delete-message/<uuid:message_id>/', delete_message, name='delete-message'),
     path('channel/<uuid:channel_id>/add-member/', add_member, name='add-member'),
     path('leave-channel/<uuid:channel_id>/', leave_channel, name='leave-channel'),
+    path('request-join-channel/<uuid:channel_id>/', request_join_channel, name='request-join-channel'),
 
 ]

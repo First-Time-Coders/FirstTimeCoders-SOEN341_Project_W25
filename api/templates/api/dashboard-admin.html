@@ -75,7 +75,7 @@
     </nav>
     <main id="channelbar">
         <div class="container-channels">
-            <div class="workspace-name">My First Workspace</div>
+            <div class="workspace-name">My Channels</div>
             <div class="channels">
                 {% for channel in channels %}
                     <div class="channel-item" id="channel-{{ channel.id }}">
@@ -111,6 +111,23 @@
         {% endif %}
         </div>
     </main>
+
+    <div class="container-channels" style="border-left: 1px solid #ccc; padding-left: 20px;">
+        <div class="workspace-name">Joinable Channels</div>
+        <div class="channels">
+            {% for channel in joinable_channels %}
+            <div class="channel-item">
+                <div class="channel"># {{ channel.name }}</div>
+                <form method="POST" action="{% url 'request-join-channel' channel.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="join-btn">Request to Join</button>
+                </form>
+            </div>
+            {% empty %}
+            <p>No available channels.</p>
+            {% endfor %}
+        </div>
+    </div>
 
 </div>
 

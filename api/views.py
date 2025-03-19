@@ -193,13 +193,19 @@ def dashboard_admin_view(request):
 
         channels = channels_query.data if channels_query.data else []
 
+        # Fetch all channels
+        all_channels = supabase_client.table("channels").select("id, name, created_by").execute().data
+
+        joinable_channels = [ch for ch in all_channels if ch["id"] not in user_channel_ids and ch["created_by"] != user_uuid]
+
     except APIError:
         channels = []
 
     return render(request, "api/dashboard-admin.html", {
         "user": request.user,
         "channels": channels,
-        "user_role": user_role
+        "user_role": user_role,
+        "joinable_channels": joinable_channels
     })
 
 @supabase_login_required
@@ -387,4 +393,7 @@ def leave_channel(request, channel_id):
         except APIError:
             messages.error(request, "Error leaving the channel.")
 
+    return redirect('dashboard-admin')
+
+def request_join_channel(request, channel_id):
     return redirect('dashboard-admin')
