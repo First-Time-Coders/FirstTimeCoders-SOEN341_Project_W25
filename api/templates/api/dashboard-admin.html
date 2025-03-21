@@ -114,15 +114,15 @@
 
 
 <div class="info-container">
-    <div class="container-channels">
+    <div class="channel-info-container">
         <div class="workspace-name">Joinable Channels</div>
         <div class="channels">
             {% for channel in joinable_channels %}
-            <div class="channel-item">
-                <div class="channel"># {{ channel.name }}</div>
+            <div class="join-channel-item">
+                <div class="item-channel"># {{ channel.name }}</div>
                 <form method="POST" action="{% url 'request-join-channel' channel.id %}">
                     {% csrf_token %}
-                    <button type="submit" class="join-btn">Request to Join</button>
+                    <button type="submit" class="join-btn">Request Join</button>
                 </form>
             </div>
             {% empty %}
