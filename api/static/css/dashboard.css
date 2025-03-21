@@ -65,7 +65,16 @@
     align-items: stretch;
  }
 
+ /*Seperate each request */
+ .request-item {
+     border-bottom: 1px solid #ccc;
+     padding: 10px 0;
+     margin-bottom: 10px;
+ }
 
+ a.has-pending .notification-icon {
+     filter: invert(24%) sepia(95%) saturate(7332%) hue-rotate(357deg) brightness(97%) contrast(116%);
+ }
 
  #sidebar {
      height: 100%;

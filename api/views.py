@@ -172,7 +172,19 @@ def dashboard_admin_view(request):
         admin_channel_ids = [entry["id"] for entry in
                              admin_channels_query.data] if admin_channels_query.data else []
 
-        all_channel_ids = list(set(user_channel_ids + admin_channel_ids))
+
+        #Fetch all general channels
+        general_channels_query = (
+            supabase_client
+                .table("channels")
+                .select("id")
+                .like("name", "GENERAL-%")
+                .execute()
+        )
+
+        general_channel_ids = [entry["id"] for entry in general_channels_query.data] if general_channels_query.data else []
+
+        all_channel_ids = list(set(user_channel_ids + admin_channel_ids + general_channel_ids))
 
         users_query = supabase_client.table("users").select("id, username").neq("id", user_uuid).execute()
         users = users_query.data if users_query.data else []
@@ -190,6 +202,16 @@ def dashboard_admin_view(request):
 
         channels = channels_query.data if channels_query.data else []
 
+        # Fetch all channels
+        all_channels = supabase_client.table("channels").select("id, name, created_by").execute().data
+        joinable_channels = [ch for ch in all_channels if ch["id"] not in user_channel_ids and ch["created_by"] != user_uuid]
+
+        pending_requests = supabase_client.table("channels_requests") \
+            .select("id, channel_id, user_id, requested_at, status, user:user_id(username), channel:channel_id(name)") \
+            .in_("channel_id", admin_channel_ids) \
+            .eq("status", "pending") \
+            .execute().data
+
     except APIError:
         channels = []
         users = []
@@ -198,8 +220,33 @@ def dashboard_admin_view(request):
         "user_id": user_uuid,
         "channels": channels,
         "user_role": user_role,
-        "users": users
+        "users": users,
+        "joinable_channels": joinable_channels,
+        "pending_requests": pending_requests
     })
+
+def notification_view(request):
+    try:
+        user_uuid = request.session.get('user_uuid')
+
+        # Fetch channels created by admin:
+        admin_channels = supabase_client.table("channels").select("id").eq("created_by", user_uuid).execute().data
+        admin_channel_ids = [c["id"] for c in admin_channels]
+
+        # Get pending requests directed to the creator:
+        pending_requests = supabase_client.table("channels_requests") \
+            .select("id, channel_id, user_id, requested_at, status, user:user_id(username), channel:channel_id(name)") \
+            .in_("channel_id", admin_channel_ids) \
+            .eq("status", "pending") \
+            .execute().data
+
+        return render(request, "api/notifications.html", {
+            "user": request.user,
+            "pending_requests": pending_requests
+        })
+
+    except APIError:
+        channels = []
 
 @supabase_login_required
 def dashboard_view(request):
@@ -232,6 +279,11 @@ def create_channel(request):
 def delete_channel(request, channel_id):
     if request.method == 'POST':
         try:
+            channel = supabase_client.table("channels").select("name").eq("id", channel_id).single().execute()
+            if channel.data and channel.data['name'].startswith("GENERAL-"):
+                messages.error(request, "General channels cannot be deleted.")
+                return redirect('dashboard-admin')
+
             supabase_client.table('channels').delete().eq('id', channel_id).execute()
             messages.success(request, "Channel deleted successfully")
             return redirect('dashboard-admin')
@@ -541,4 +593,44 @@ def add_member(request, channel_id):
 
     return redirect('dashboard-admin')
 
+def leave_channel(request, channel_id):
+    if request.method == 'POST':
+        user_uuid = request.session['user_uuid']
+        try:
+            # Prevents leaving general channels
+            channel = supabase_client.table("channels").select("name").eq("id", channel_id).single().execute()
+            if channel.data and channel.data['name'].startswith("GENERAL-"):
+                return redirect('dashboard-admin')
 
+            supabase_client.table("channel_members").delete().eq("user_id", user_uuid).eq("channel_id", channel_id).execute()
+        except APIError:
+            messages.error(request, "Error leaving the channel.")
+
+    return redirect('dashboard-admin')
+
+def request_join_channel(request, channel_id):
+    if request.method == 'POST':
+        user_uuid = request.session['user_uuid']
+
+        supabase_client.table("channels_requests").insert({
+            "user_id": user_uuid,
+            "channel_id": str(channel_id),
+            "status": "pending",
+        }).execute()
+    return redirect('dashboard-admin')
+
+def approve_request(request, request_id):
+    # Automatically add user to channel_members
+    user_uuid = request.session['user_uuid']
+    req = supabase_client.table("channels_requests").select("channel_id, user_id").eq("id", str(request_id)).single().execute().data
+    supabase_client.table("channel_members").insert({
+        "channel_id": req["channel_id"],
+        "user_id": req["user_id"],
+        "added_by": user_uuid
+    }).execute()
+    supabase_client.table("channels_requests").delete().eq("id", str(request_id)).execute()
+    return redirect('notifications')
+
+def reject_request(request, request_id):
+    supabase_client.table("channels_requests").delete().eq("id", str(request_id)).execute()
+    return redirect('notifications')

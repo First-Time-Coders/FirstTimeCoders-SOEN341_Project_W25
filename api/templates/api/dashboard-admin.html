@@ -48,9 +48,9 @@
                 </a>
             </li>
             <li>
-                <a href="">
-                    <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon">
-                    <span>Notifications</span>
+                <a href="{% url 'notifications' %}" class="{% if pending_requests|length > 0 %}has-pending{% endif %}">
+                    <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon" class="notification-icon">
+                    <span>Notification</span>
                 </a>
             </li>
             <li>
@@ -92,6 +92,10 @@
                         <div class="settings-window" id="settings-window-{{ channel.id }}" style="display: none;">
                             <button class="add-btn" onclick="openAddModal('{% url 'add-member' channel.id %}')">Add Member</button>
                             <button class="del-btn" onclick="openDeleteModal('{% url 'delete-channel' channel.id %}')" id="del-btn">Delete</button>
+                            <form action="{% url 'leave-channel' channel.id %}" method="post" onsubmit="return confirm('Are you sure you want to leave this channel?');">
+                                {% csrf_token %}
+                                <button type="submit">Leave Channel</button>
+                            </form>
                         </div>
                     </div>
                     </div>
@@ -106,13 +110,25 @@
         {% endif %}
         </div>
     </main>
-
 </div>
 
 
 <div class="info-container">
-    <div class="channel-info-container">
-        <h1 id="channel-name">Channel Info</h1>
+    <div class="container-channels">
+        <div class="workspace-name">Joinable Channels</div>
+        <div class="channels">
+            {% for channel in joinable_channels %}
+            <div class="channel-item">
+                <div class="channel"># {{ channel.name }}</div>
+                <form method="POST" action="{% url 'request-join-channel' channel.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="join-btn">Request to Join</button>
+                </form>
+            </div>
+            {% empty %}
+            <p>No available channels.</p>
+            {% endfor %}
+        </div>
     </div>
     <div class="user-info-container">
         <div class="users" style="font-weight: 600; font-size: 20px">Users</div>
