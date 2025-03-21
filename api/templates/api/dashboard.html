@@ -33,6 +33,11 @@
                 </button>
             </li>
 
+            <!-- <a href="">
+                 <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
+                 <span>Workspace</span>
+             </a>-->
+
             <li class="active">
                 <a href="">
                     <img src="{% static 'icons/home-icon.svg' %}" alt="SVG Icon">
@@ -54,6 +59,7 @@
                 </a>
             </li>
 
+            <!-- Profile link added here -->
             <li>
                 <a href="{% url 'profile' %}">
                     <img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon">
@@ -62,20 +68,30 @@
             </li>
 
             <li class="dropdown">
+
                 <div class="dropdown-menu">
                     <button class="dropdown-btn">
                         <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
                         <span>Workspace</span>
                     </button>
+
                     <ul class="sub-workspace">
-                        <li><a href="#"></a>My First Workspace</li>
+
+                        <li><a href="#">My First Workspace</a></li>
+
                     </ul>
+
                 </div>
+
             </li>
+
         </ul>
+
     </nav>
     <main id="channelbar">
+
         <div class="container-channels">
+
             <div class="workspace-name">My First Workspace</div>
             <div class="channels">
                 {% for channel in channels %}
@@ -96,7 +112,9 @@
             <div class="channel"># z_ambassador</div>
             <div class="channel"># z_competition</div>
             <div class="channel"># z_conference</div>
+        </div>
     </main>
+
 </div>
 
 <script defer>
@@ -105,9 +123,10 @@
         const sidebar = document.getElementById('sidebar');
 
         toggleButton.addEventListener("click", function() {
-        sidebar.classList.toggle('close');
-        toggleButton.classList.toggle('rotate');
-         });
+            sidebar.classList.toggle('close');
+            toggleButton.classList.toggle('rotate');
+        });
+
     });
 </script>
 

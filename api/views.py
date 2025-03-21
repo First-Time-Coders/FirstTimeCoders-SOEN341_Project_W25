@@ -1,6 +1,7 @@
 import datetime
 from http.client import responses
 
+
 import bcrypt
 import uuid
 import supabase
@@ -8,7 +9,6 @@ from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate, logout, get_user_model
 from gotrue.errors import AuthApiError
 from postgrest import APIError
-from django.contrib.auth.decorators import login_required
 
 from .decorators import supabase_login_required
 from .forms import registerform
@@ -18,7 +18,6 @@ from django.contrib import messages
 from supabase import create_client, Client
 from django.contrib.auth.hashers import make_password
 import os
-from django.conf import settings
 
 
 # Load Supabase credentials
@@ -44,7 +43,16 @@ def register_view(request):
 
         try:
             # Send registration request to Supabase
-            response = supabase_client.auth.sign_up({"email": email, "password": password, "options":{"data":{"username":username}}})
+            response = (supabase_client.auth.sign_up({
+                "email": email,
+                "password": password,
+                "options":{
+                    "data":{
+                        "username":username,
+                        "role":role
+                     }
+                }
+            }))
             user_data = response.user
 
             if user_data:
@@ -61,7 +69,8 @@ def register_view(request):
                     "last name": last_name,
                     "password": hashed,
                     "gender": gender,
-                    "role": role}).execute()
+                    "role": role
+                }).execute()
 
         except AuthApiError as e:
             messages.error(request, "Failed register attempt")
@@ -80,9 +89,6 @@ def register_view(request):
         return redirect('login')
 
     return render(request, 'api/register.html')
-
-
-
 
 
 
@@ -211,24 +217,6 @@ def edit_profile_view(request):
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 def login_view(request):
     if request.method == 'POST':
         email = request.POST["email"]
@@ -254,10 +242,6 @@ def login_view(request):
 
 
             return redirect("dashboard-admin")
-            #if user_role == "admin" or "member":
-               #return redirect("dashboard-admin")
-            #else:
-             #   return redirect("dashboard")
 
         except AuthApiError as e:
             if "invalid_grant" in str(e):
@@ -282,13 +266,56 @@ def home_view(request):
 
 @supabase_login_required
 def dashboard_admin_view(request):
+    user_role = request.session.get('role')
+
     try:
-        channels_query = supabase_client.table("channels").select("id, name").execute()
+        user_uuid = request.session.get('user_uuid')
+
+        user_channels_query = (
+            supabase_client
+            .table("channel_members")
+            .select("channel_id")
+            .eq("user_id", user_uuid)
+            .execute()
+        )
+
+        user_channel_ids = [entry["channel_id"] for entry in
+                            user_channels_query.data] if user_channels_query.data else []
+
+        admin_channels_query = (
+            supabase_client
+            .table("channels")
+            .select("id")
+            .eq("created_by", user_uuid)
+            .execute()
+        )
+
+        admin_channel_ids = [entry["id"] for entry in
+                             admin_channels_query.data] if admin_channels_query.data else []
+
+        all_channel_ids = list(set(user_channel_ids + admin_channel_ids))
+
+        if not all_channel_ids:
+            return render(request, "api/dashboard-admin.html", {"channels": [], "user_role": user_role})  # No channels found
+
+        channels_query = (
+            supabase_client
+            .table("channels")
+            .select("id, name, created_by")
+            .in_("id", all_channel_ids)
+            .execute()
+        )
+
         channels = channels_query.data if channels_query.data else []
+
     except APIError:
         channels = []
 
-    return render(request, "api/dashboard-admin.html", {"user": request.user, "channels": channels})
+    return render(request, "api/dashboard-admin.html", {
+        "user": request.user,
+        "channels": channels,
+        "user_role": user_role
+    })
 
 @supabase_login_required
 def dashboard_view(request):
@@ -335,6 +362,8 @@ def delete_channel(request, channel_id):
 @supabase_login_required
 def view_channel(request, channel_id):
     try:
+        is_member = supabase_client.table("channel_members").select("id").eq("user_id", request.session['user_uuid']).eq("channel_id", channel_id).execute()
+
         # Fetch the channel details
         channel_query = supabase_client.table("channels").select("name").eq("channel_id", channel_id).single().execute()
         channel = channel_query.data
@@ -355,8 +384,13 @@ def view_channel(request, channel_id):
     })
 
 @supabase_login_required
-#im testin rn but later: messages_view(request, channel_id):
 def messages_view(request, channel_id):
+    user_uuid = request.session['user_uuid']
+    member_check = supabase_client.table("channel_members").select("id").eq("user_id", user_uuid).eq("channel_id", channel_id).execute()
+    created_by_check = supabase_client.table("channels").select("created_by").eq("id", channel_id).single().execute()
+    if not member_check.data and not created_by_check.data:
+        return HttpResponse("Access Denied: You are not a member of this channel", status=403)
+
     if request.method == 'POST':
         content = request.POST.get('message')
         user_uuid = request.session['user_uuid']
@@ -377,7 +411,7 @@ def messages_view(request, channel_id):
         return redirect('messages', channel_id=channel_id)
 
 #used to fetch messages from a channel
-    message = supabase_client.table('channel_messages').select('message, username').eq('channel_id', channel_id).execute()
+    message = supabase_client.table('channel_messages').select('message, username, id').eq('channel_id', channel_id).execute()
 
     channel = supabase_client.table('channels').select('name').eq('id', channel_id).single().execute()
     channel_name = channel.data['name'] if channel.data else "Unknown Channel"
@@ -388,3 +422,95 @@ def messages_view(request, channel_id):
         'channel_name': channel_name
     }
     return render(request, "api/messages.html", context)
+
+@supabase_login_required
+def delete_message(request, message_id):
+    if request.method == 'POST':
+        channel_id = request.POST.get('channel_id')
+        user_uuid = request.session.get('user_uuid')
+        user_role = request.session.get('role')
+
+        try:
+            message_query = supabase_client.table("channel_messages").select("id", "user_id").eq("id", message_id).single().execute()
+            message = message_query.data
+
+            if not message:
+                message.error(request, "Message not found")
+                return redirect('messages', channel_id=channel_id)
+
+            if user_role == 'admin' or (user_role == "member" and message["user_id"] == user_uuid):
+                supabase_client.table('channel_messages').delete().eq('id', message_id).execute()
+                messages.success(request, "Message deleted successfully")
+            else:
+                messages.error(request, "You do not have permission to delete this message.")
+
+        except APIError as e:
+            messages.error(request, "Failed to delete message")
+            return redirect('messages', channel_id=channel_id)
+
+    return redirect('messages', channel_id=request.POST.get('channel_id'))
+
+
+
+@supabase_login_required
+def add_member(request, channel_id):
+    if request.method == "POST":
+        username = request.POST.get("username")
+        current_user_uuid = request.session['user_uuid']
+
+        # Fetch the user_id from Supabase using the username
+        user_response = supabase_client.table("users").select("id").eq("username", username).execute()
+
+        if user_response.data is not None and len(user_response.data) > 0:
+            user_id = user_response.data[0]['id']
+            print(str(channel_id))
+            print(request.user.id)
+
+            # Add the user to the channel_members table
+            response = supabase_client.table("channel_members").insert({
+                "user_id": user_id,
+                "channel_id": str(channel_id),
+                "added_by": current_user_uuid
+            }).execute()
+
+            if response.data:
+                return redirect("dashboard-admin")  # Redirect to dashboard
+            else:
+                return HttpResponse("Error adding member", status=400)
+        else:
+            return HttpResponse("User not found", status=404)
+
+    return render(request, "api/add-member.html", {"channel_id": channel_id})
+
+
+@supabase_login_required
+def remove_user_from_channel(request, channel_id):
+    if request.method == "POST":
+        username = request.POST.get("username")
+
+        if not username:
+            messages.error(request, "Username is required.")
+            return redirect("remove-user-from-channel", channel_id=channel_id)  # Redirect back to form
+
+        # Fetch the user_id from Supabase using the username
+        user_response = supabase_client.table("users").select("id").eq("username", username).execute()
+
+        if user_response.data and len(user_response.data) > 0:
+            user_id = user_response.data[0]['id']
+
+            # Remove the user from the channel_members table
+            response = supabase_client.table("channel_members").delete().match({
+                "user_id": user_id,
+                "channel_id": str(channel_id)
+            }).execute()
+
+            if response.data:
+                messages.success(request, "User removed successfully.")
+                return redirect("dashboard-admin")  # Redirect after success
+            else:
+                messages.error(request, "Error removing user.")
+        else:
+            messages.error(request, "User not found.")
+
+    # Render form for GET request
+    return render(request, "api/remove-user.html", {"channel_id": channel_id})
