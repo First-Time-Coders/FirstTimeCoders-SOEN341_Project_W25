@@ -55,7 +55,7 @@
             width: 100%;
             max-width: 280px;
             padding: 12px;
-            margin-top: 10px;
+            margin: 10px auto;
             border-radius: 6px;
             border: 1px solid #ddd;
             font-size: 14px;
@@ -126,13 +126,11 @@
         {% csrf_token %}
         <label for="field-select">Select field to edit:</label>
         <select id="field-select" name="field" required onchange="toggleInputField()">
-            <option value="">-- Choose a field --</option>
+            <option value=""> Choose a field </option>
             <option value="first_name">First Name</option>
             <option value="last_name">Last Name</option>
-            <option value="email">Email</option>
             <option value="username">Username</option>
             <option value="gender">Gender</option>
-            <option value="role">Role</option>
         </select>
 
         <div id="input-container">
@@ -143,12 +141,6 @@
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
                 <option value="Other">Other</option>
-            </select>
-
-            <!-- Role Dropdown -->
-            <select id="role-select" style="display:none;">
-                <option value="Admin">Admin</option>
-                <option value="User">User</option>
             </select>
 
             <div id="error-message" class="error-message"></div>
@@ -166,19 +158,15 @@
         let inputContainer = document.getElementById("input-container");
         let textInput = document.getElementById("field-input");
         let genderSelect = document.getElementById("gender-select");
-        let roleSelect = document.getElementById("role-select");
         let updateButton = document.getElementById("update-button");
 
-        // Reset display and remove "name" attributes to prevent conflicts
         textInput.style.display = "none";
         genderSelect.style.display = "none";
-        roleSelect.style.display = "none";
         inputContainer.style.display = "none";
         updateButton.style.display = "none";
 
         textInput.removeAttribute("name");
         genderSelect.removeAttribute("name");
-        roleSelect.removeAttribute("name");
 
         if (selectedField) {
             inputContainer.style.display = "block";
@@ -187,9 +175,6 @@
             if (selectedField === "gender") {
                 genderSelect.style.display = "block";
                 genderSelect.setAttribute("name", "value");
-            } else if (selectedField === "role") {
-                roleSelect.style.display = "block";
-                roleSelect.setAttribute("name", "value");
             } else {
                 textInput.style.display = "block";
                 textInput.type = "text";
@@ -215,15 +200,6 @@
         if (selectedField === "first_name" || selectedField === "last_name") {
             if (!/^[A-Za-z\s]+$/.test(inputValue)) {
                 errorMessage.textContent = "Name must contain only letters.";
-                errorMessage.style.display = "block";
-                return false;
-            }
-        }
-
-        if (selectedField === "email") {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(inputValue)) {
-                errorMessage.textContent = "Please enter a valid email address.";
                 errorMessage.style.display = "block";
                 return false;
             }
