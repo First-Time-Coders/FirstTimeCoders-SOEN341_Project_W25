@@ -238,14 +238,13 @@
     border-radius: 5px;
     cursor: pointer;
     width: 100%;
-    transition: background 0.3s ease;
+    transition: 0.3s ease;
     white-space: nowrap; /* Prevent line breaks */
     text-align: center; /* Center the text */
 }
 
 .join-btn:hover{
-    background: #F5F5F5;
-    color: #0F3923;
+    filter: brightness(150%) ;
 }
 
 .channel-item {
