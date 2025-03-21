@@ -15,7 +15,7 @@
     <div class="container">
         <div class="create-box">
             <div class="create-message">
-                <p>Enter the email of the user you want to message</p>
+                <p>Enter the username of the user you want to message</p>
             </div>
 
             {% if messages %}
@@ -28,7 +28,7 @@
 
             <form id="start-dm-form" method="POST">
                 {% csrf_token %}
-                <input type="email" placeholder="User Email" id="recipient_email" name="recipient_email" required>
+                <input type="" placeholder="Recipient Username" id="recipient_username" name="recipient_username" required>
                 <button type="submit">Start Conversation</button>
             </form>
             <a href="{% url 'dm_list' %}">Back to DMs</a>

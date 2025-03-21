@@ -195,116 +195,100 @@
     flex-direction: column;
 }
 
- .container-channels {
-            width: 250px;
-            background-color: #F8F8F8;
-            opacity: .9;
+.container-channels {
+        width: 250px;
+        background-color: #F8F8F8;
+        opacity: .9;
 
-            color:  #1C1C1E;
-            height:100vh;
-            padding: .79em;
-
-        }
-
-    .channel-item {
-        display:flex;
-        flex-direction: row;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .gear-icon {
-        transition: 0.3s ease-in-out;
-    }
-
-    .rotate-gear{
-        transform: rotate(90deg);
-    }
-
-    .settings-btn {
-        background: #0F3923;
-        border-radius: 10vw;
-        padding-right: 4px;
-        padding-left: 4px;
-        padding-top: 4px;
-        border: none;
-        cursor: pointer;
-    }
-
-    .settings-window {
-        display: none; /* Hidden by default */
-        position: absolute;
-        background: #F5F5F5;
-        border: 1px solid #ddd;
-        box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
-        padding: 10px;
-        width: 150px;
-        border-radius: 5px;
-        z-index: 1000;
-    }
-
-    .settings-window form {
-        margin-bottom: 5px;
+        color:  #1C1C1E;
+        height:100vh;
+        padding: .79em;
 
     }
 
-    .settings-window button {
-        background: #F5F5F5;
-        color: #0F3923;
-        border: none;
-        padding: 8px 12px;
-        cursor: pointer;
-        width: 100%;
-        border-radius: 5px;
-        transition: background 0.3s ease;
-}
-
-    .settings-window button:hover {
-        background: darkred;
-        color: #F5F5F5;
-    }
-
-    .settings-window .create button:hover {
-        background: #0F3923;
-        color: #F5F5F5;
-    }
-
-    .settings-window form button:hover{
-        background: #0F3923;
-        color: #F5F5F5;
-    }
-
-    .settings-window form button{
-        background: #F5F5F5;
-        color: #0F3923;
-        border: none;
-        padding: 8px 12px;
-        cursor: pointer;
-        width: 100%;
-        border-radius: 5px;
-        transition: background 0.3s ease;
-    }
-
-    .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.25);
-    display: flex;
+.channel-item {
+    display:flex;
+    flex-direction: row;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
 }
 
-    .modal-overlay h2{
-        color: #0F3923;
-    }
-    .modal-overlay p{
-        color: #1C1C1E;
-        font-size: 12px;
-        padding: 10px;
-    }
+.gear-icon {
+    transition: 0.3s ease-in-out;
+}
+
+.rotate-gear{
+    transform: rotate(90deg);
+}
+
+.settings-btn {
+    background: #0F3923;
+    border-radius: 10vw;
+    padding-right: 4px;
+    padding-left: 4px;
+    padding-top: 4px;
+    border: none;
+    cursor: pointer;
+}
+
+.settings-window {
+    display: none;
+    position: absolute;
+    background: #F5F5F5;
+    border: 1px solid #ddd;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+    padding: 10px;
+    width: 150px;
+    border-radius: 5px;
+    z-index: 1000;
+}
+
+.del-btn:hover {
+    background: darkred;
+    color: #F5F5F5;
+}
+
+.add-btn {
+    margin-bottom: 5px;
+}
+.add-btn:hover {
+    background: #0F3923;
+    color: #F5F5F5;
+}
+
+
+.settings-window button{
+    background: #F8F8F8;
+    color: #0F3923;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 5px;
+    transition: background 0.3s ease;
+}
+
+.modal-overlay {
+position: fixed;
+z-index: 20;
+top: 0;
+left: 0;
+width: 100%;
+height: 100%;
+background: rgba(0, 0, 0, 0.25);
+display: flex;
+align-items: center;
+justify-content: center;
+}
+
+.modal-overlay h2{
+    color: #0F3923;
+}
+.modal-overlay p{
+    color: #1C1C1E;
+    font-size: 12px;
+    padding: 10px;
+}
 
 .modal-content {
     background: #F5F5F5;
@@ -314,6 +298,46 @@
     width: 300px;
     box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
 }
+
+.modal-content input{
+    margin: 1vh 0;
+    padding: 1vh;
+    border-radius: 5px;
+    border: 1px solid #F5F5F5;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.confirm-add {
+    background: #F8F8F8;
+    color: #1C1C1E;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.confirm-add:hover {
+    background: #0F3923;
+    color: #F5F5F5;
+}
+
+.cancel-add {
+    background: #F8F8F8;
+    color: #1C1C1E;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 5px;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+.cancel-add:hover {
+    background: #0F3923;
+    color: #F5F5F5;
+}
+
 
 .confirm-delete {
     background: #F8F8F8;
@@ -340,64 +364,62 @@
     cursor: pointer;
     transition: background 0.3s ease;
 }
- .cancel-delete:hover {
+.cancel-delete:hover {
     background: #0F3923;
     color: #F5F5F5;
 }
 
 
+.workspace-name {
+    font-size: 18px;
+    font-weight: bold;
+    margin-bottom: 15px;
+}
 
+.channels {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 
-        .workspace-name {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-        }
+.channel {
+    padding: 8px;
+    border-radius: 5px;
+    cursor: pointer;
+    width: 200px;
+    transition: background 0.3s ease;
+    background-color: #F5F5F5;
+}
 
-        .channels {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+a{
+    color: #0F3923;
+}
 
-        .channel {
-            padding: 8px;
-            border-radius: 5px;
-            cursor: pointer;
-            width: 200px;
-            transition: background 0.3s ease;
-            background-color: #F5F5F5;
-        }
+a:visited {
+    color: #0F3923;
+}
 
-        a{
-            color: #0F3923;
-        }
+.channel:hover {
+    background-color: #0F3923;
+    color: #F5F5F5;
+}
 
-        a:visited {
-            color: #0F3923;
-        }
+.create-channel {
+    margin-top: 20px;
+    padding: 10px;
+    text-align: center;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    background: #F5F5F5;
+    transition: background 0.3s ease;
+}
 
-        .channel:hover {
-            background-color: #0F3923;
-            color: #F5F5F5;
-        }
+.create-channel:hover {
+    background-color: #0F3923;
+    color: #F5F5F5;
 
-        .create-channel {
-            margin-top: 20px;
-            padding: 10px;
-            text-align: center;
-            border-radius: 5px;
-            border: none;
-            cursor: pointer;
-            background: #F5F5F5;
-            transition: background 0.3s ease;
-        }
-
-        .create-channel:hover {
-            background-color: #0F3923;
-            color: #F5F5F5;
-
-        }
+}
 
 
 .info-container {
@@ -416,30 +438,43 @@
     display: flex;
     flex-direction: column;
     height: 100%;
-    padding: 5px 1em;
+    padding: .79em;
     background-color: #F8F8F8;
     width: 250px;
 }
 
+/* Sticky "Users" header */
 .users {
-    padding: 17px;
-    margin-bottom: 16px;
+    margin-bottom: 15px;
+    position: sticky;
+    top: 0;
+    background-color: #F8F8F8;
+    z-index: 10;
+    border-bottom: none;
 }
 
-.users-list{
+/* User list with 60% height and scroll */
+.users-list {
     display: flex;
     flex-direction: column;
-    padding-left: 17px;
     padding-right: 17px;
+    border-radius: 5px;
+    height: 70%;
+    overflow-y: auto;
+    scrollbar-width: auto; /* For Firefox */
+    -ms-overflow-style: auto; /* For IE/Edge */
 }
 
-.user-item{
+/* Optional: Clean up user items */
+.user-item {
     width: 100%;
     background-color: #F5F5F5;
     border-radius: 5px;
+    margin-bottom: 5px;
 }
 
-.user-item button{
+/* Style the button within user items */
+.user-item button {
     border-radius: 5px;
     padding: 10px;
     width: 87%;
@@ -451,10 +486,11 @@
     cursor: pointer;
 }
 
-.user-item button:hover{
-    background-color: #0F3923;
-    color: #F5F5F5;
+/* Optional hover effect for a subtle pop */
+.user-item button:hover {
+    background-color: #E0E0E0;
 }
+
 
 .user-name {
     font-size: 14px;

@@ -4,22 +4,34 @@ body {
     background-color: #F5F5F5;
     margin: 0;
     padding: 0;
+    min-height: 100vh;
+    max-height: 100dvh;
+}
+
+.content-container{
+    display: flex;
+    flex-direction: row;
+    padding-top: 50px; /* Offset for the fixed top bar */
+    height: calc(100vh - 50px); /* Full height minus top bar */
+    width: 100vw;
 }
 
 .chat-container {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    max-width: 800px;
+    height: 87dvh;
+    width: 100%;
     margin: 0 auto;
     padding: 20px;
     background-color: #FAFAFA;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
 }
+
+
 
 /* Channel Header */
 .channel-header {
-    padding-bottom: 10px;
     border-bottom: 2px solid #f1f1f1;
 }
 
@@ -34,6 +46,7 @@ body {
     flex: 1;
     overflow-y: auto;
     margin-top: 20px;
+    height: 500px;
 }
 
 /* Message Block */
@@ -175,5 +188,13 @@ body {
     height: 28px;
 }
 
+a {
+    text-decoration: none;
+    color: #0F3923;
+}
+
+a visited {
+    color: #0F3923;
+}
 
 

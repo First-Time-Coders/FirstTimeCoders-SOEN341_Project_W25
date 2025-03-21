@@ -285,7 +285,7 @@ def messages_view(request, channel_id):
             "user_id": user_uuid,
             "channel_id": str(channel_id),
             "message": content,
-            "created_at": datetime.datetime.now().isoformat(),
+            "created_at": datetime.now().isoformat(),
             "username": username
         }).execute()
 
@@ -360,6 +360,23 @@ def dm_view(request, conversation_id):
     user_uuid = request.session['user_uuid']
 
     try:
+        # Fetch conversations where the user is either user1 or user2
+        conversations = supabase_client.table("Conversations Table").select("id, user1_id, user2_id").or_(
+            f"user1_id.eq.{user_uuid},user2_id.eq.{user_uuid}"
+        ).execute()
+        dm_list = []
+        for conv in conversations.data:
+            other_user_id = conv['user2_id'] if conv['user1_id'] == user_uuid else conv['user1_id']
+            user_query = supabase_client.table("users").select("username").eq("id", other_user_id).single().execute()
+            dm_list.append({
+                "conversation_id": conv['id'],
+                "other_user": user_query.data['username'] if user_query.data else "Unknown"
+            })
+    except APIError as e:
+        messages.error(request, "Failed to load DMs")
+        dm_list = []
+
+    try:
         # Fetch conversation data
         conv_data = supabase_client.table("Conversations Table").select("*").eq("id", conversation_id).execute()
 
@@ -426,7 +443,8 @@ def dm_view(request, conversation_id):
         return render(request, "api/dm.html", {
             "conversation_id": conversation_id,
             "chat_messages": chat_messages,
-            "other_user": other_user
+            "other_user": other_user,
+            "dm_list": dm_list
         })
 
     except Exception as e:
@@ -436,17 +454,17 @@ def dm_view(request, conversation_id):
 @supabase_login_required
 def start_dm_view(request):
     if request.method == 'POST':
-        recipient_email = request.POST.get('recipient_email')
+        recipient_username = request.POST.get('recipient_username')
         user_uuid = request.session['user_uuid']
-        print(f"DEBUG: Starting DM process - Recipient Email: {recipient_email}, User UUID: {user_uuid}")
+        print(f"DEBUG: Starting DM process - Recipient Email: {recipient_username}, User UUID: {user_uuid}")
 
         try:
-            print(f"DEBUG: Querying users table for {recipient_email}")
-            recipient = supabase_client.table("users").select("id").eq("email", recipient_email).single().execute()
+            print(f"DEBUG: Querying users table for {recipient_username}")
+            recipient = supabase_client.table("users").select("id").eq("username", recipient_username).single().execute()
             print(f"DEBUG: Recipient Query Result: {recipient.data}")
             if not recipient.data:
                 messages.error(request, "User not found")
-                print(f"DEBUG: User not found for email: {recipient_email}")
+                print(f"DEBUG: User not found for email: {recipient_username}")
                 return redirect('start_dm')
             recipient_id = recipient.data['id']
             print(f"DEBUG: Recipient ID: {recipient_id}")
@@ -492,18 +510,17 @@ def start_dm_view(request):
     return render(request, "api/start_dm.html")
 
 @supabase_login_required
+# views.py
 def add_member(request, channel_id):
     if request.method == "POST":
         username = request.POST.get("username")
-        current_user_uuid = request.session['user_uuid']
+        current_user_uuid = request.session.get('user_uuid')
 
-        # Fetch the user_id from Supabase using the username
+        # Fetch user_id from Supabase using the provided username
         user_response = supabase_client.table("users").select("id").eq("username", username).execute()
 
-        if user_response.data is not None and len(user_response.data) > 0:
+        if user_response.data and len(user_response.data) > 0:
             user_id = user_response.data[0]['id']
-            print(str(channel_id))
-            print(request.user.id)
 
             # Add the user to the channel_members table
             response = supabase_client.table("channel_members").insert({
@@ -513,11 +530,15 @@ def add_member(request, channel_id):
             }).execute()
 
             if response.data:
-                return redirect("dashboard-admin")  # Redirect to dashboard
-            else:
-                return HttpResponse("Error adding member", status=400)
-        else:
-            return HttpResponse("User not found", status=404)
+                messages.success(request, "User added successfully!")
+                return redirect('dashboard-admin')
 
-    return render(request, "api/add-member.html", {"channel_id": channel_id})
+            messages.error(request, "Failed to add member.")
+            return redirect('dashboard-admin')
+
+        messages.error(request, "User not found.")
+        return redirect('dashboard-admin')
+
+    return redirect('dashboard-admin')
+
 

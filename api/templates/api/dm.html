@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>DM with {{ other_user }}</title>
     <link rel="stylesheet" href="{% static 'css/message.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <style>
         /* Existing styles */
         .status-indicator {
@@ -20,7 +21,7 @@
         .status-offline { background-color: #9E9E9E; }
         
         .sent-message {
-            background-color: #E3F2FD;
+            background-color: rgba(15, 57, 35, 0.2);
             margin-left: auto;
             max-width: 70%;
             text-align: right;
@@ -181,77 +182,118 @@
     </style>
 </head>
 <body>
-    <div class="chat-container">
-        <a href="{% url 'dm_list' %}" class="back-link">← Back to Direct Messages</a>
-        <div class="channel-header">
-            <h1 id="channel-name">
-                <span class="status-indicator status-online"></span>
-                {{ other_user }}
-                <span class="user-status">Online</span>
-            </h1>
-        </div>
-        <div class="message-container" id="message-container">
-            {% for message in chat_messages %}
-    <div class="message {% if message.sender_id == request.session.user_uuid %}sent-message{% else %}received-message{% endif %}" id="message-{{ message.id }}">
-        {% if message.quoted_message_id and message.quoted_author and message.quoted_content %}
-            <div class="message-quote">
-                <div class="quoted-author">{{ message.quoted_author }}</div>
-                <div class="quoted-content">{{ message.quoted_content }}</div>
+    <header id="topbar">
+        <div class="top-bar-content">
+            <div class="logo-name">
+                <img src="{% static 'logo/pixelcut-export.png' %}" style="width: 100px; height: 45px" alt="logo">
+                <span>ChatHaven</span>
             </div>
-        {% endif %}
-        <p>
-            <strong>{{ message.username }}:</strong> 
-            {{ message.content }}
-            <span class="timestamp">{{ message.created_at|date:"M d, g:i A" }}</span>
-        </p>
-        <div class="message-actions">
-            <button class="reply-button" onclick="replyToMessage('{{ message.id }}', '{{ message.username }}', '{{ message.content }}')">
-                Reply
-            </button>
         </div>
-    </div>
-{% empty %}
-    <p>Start the conversation!</p>
-{% endfor %}
-        </div>
-        <div class="message-input">
-            <div id="quote-container" class="quote-container">
-                <button class="close-quote" onclick="cancelReply()">×</button>
-                <div class="quote-author" id="quote-author"></div>
-                <div class="quote-content" id="quote-content"></div>
-                <input type="hidden" id="quoted-message-id" name="quoted_message_id">
+    </header>
+    <div class="content-container">
+        <nav id="sidebar">
+            <ul>
+                <li>
+                    <span class="name-app" style="font-weight: 600; font-size: 20px">Dashboard</span>
+                    <button id="toggle-btn">
+                        <img src="{% static 'icons/arrowleft-icon.svg' %}" alt="SVG Icon">
+                    </button>
+                </li>
+                <li><a href="{% url 'dashboard-admin' %}"><img src="{% static 'icons/home-icon.svg' %}" alt="Home"><span>Home</span></a></li>
+                <li class="active"><a href="{% url 'dm_list' %}"><img src="{% static 'icons/dm-icon.svg' %}" alt="DMs"><span>Dms</span></a></li>
+                <li><form><button id="logout-button" formaction="{% url 'logout' %}">Logout</button></form></li>
+            </ul>
+        </nav>
+        <main id="channelbar">
+            <div class="container-channels">
+                <div class="workspace-name">Your Direct Messages</div>
+                <div class="channels">
+                    {% for dm in dm_list %}
+                        <a href="{% url 'dm' dm.conversation_id %}" class="channel-link">
+                            <div class="channel">
+                                <span class="status-indicator status-online"></span>
+                                {{ dm.other_user }}
+                            </div>
+                        </a>
+                    {% empty %}
+                        <p>No DMs yet. Start one below!</p>
+                    {% endfor %}
+                </div>
+                <form action="{% url 'start_dm' %}">
+                    <button class="create-channel">+ Start a DM</button>
+                </form>
             </div>
-            <form method="POST" id="message-form">
-                {% csrf_token %}
-                <div class="message-input-container">
-                    <input type="text" name="message" id="message-input" placeholder="Type your message..." autocomplete="off">
-                    <div class="emoji-picker">
-                        <button type="button" class="emoji-button" onclick="toggleEmojiPicker()">😊</button>
-                        <div class="emoji-popup" id="emoji-popup">
-                            <div class="emoji-grid">
-                                <div class="emoji" onclick="addEmoji('😊')">😊</div>
-                                <div class="emoji" onclick="addEmoji('😂')">😂</div>
-                                <div class="emoji" onclick="addEmoji('😍')">😍</div>
-                                <div class="emoji" onclick="addEmoji('🤔')">🤔</div>
-                                <div class="emoji" onclick="addEmoji('😎')">😎</div>
-                                <div class="emoji" onclick="addEmoji('👍')">👍</div>
-                                <div class="emoji" onclick="addEmoji('❤️')">❤️</div>
-                                <div class="emoji" onclick="addEmoji('😁')">😁</div>
-                                <div class="emoji" onclick="addEmoji('😉')">😉</div>
-                                <div class="emoji" onclick="addEmoji('🎉')">🎉</div>
-                                <div class="emoji" onclick="addEmoji('🔥')">🔥</div>
-                                <div class="emoji" onclick="addEmoji('😀')">😀</div>
-                                <div class="emoji" onclick="addEmoji('👋')">👋</div>
-                                <div class="emoji" onclick="addEmoji('👏')">👏</div>
-                                <div class="emoji" onclick="addEmoji('🙏')">🙏</div>
-                                <div class="emoji" onclick="addEmoji('💯')">💯</div>
-                                <div class="emoji" onclick="addEmoji('🤣')">🤣</div>
+        </main>
+        <div class="chat-container">
+            <div class="channel-header">
+                <h1 id="channel-name">
+                    <span class="status-indicator status-online"></span>
+                    {{ other_user }}
+                </h1>
+            </div>
+            <div class="message-container" id="message-container">
+                {% for message in chat_messages %}
+                <div class="message {% if message.sender_id == request.session.user_uuid %}sent-message{% else %}received-message{% endif %}" id="message-{{ message.id }}">
+                {% if message.quoted_message_id and message.quoted_author and message.quoted_content %}
+                    <div class="message-quote">
+                        <div class="quoted-author">{{ message.quoted_author }}</div>
+                        <div class="quoted-content">{{ message.quoted_content }}</div>
+                    </div>
+                {% endif %}
+                <p>
+                    <strong>{{ message.username }}:</strong>
+                    {{ message.content }}
+                    <span class="timestamp">{{ message.created_at|date:"M d, g:i A" }}</span>
+                </p>
+                <div class="message-actions">
+                    <button class="reply-button" onclick="replyToMessage('{{ message.id }}', '{{ message.username }}', '{{ message.content }}')">
+                        Reply
+                    </button>
+                </div>
+                </div>
+            {% empty %}
+                <p>Start the conversation!</p>
+            {% endfor %}
+            </div>
+            <div class="message-input">
+                <div id="quote-container" class="quote-container">
+                    <button class="close-quote" onclick="cancelReply()">×</button>
+                    <div class="quote-author" id="quote-author"></div>
+                    <div class="quote-content" id="quote-content"></div>
+                    <input type="hidden" id="quoted-message-id" name="quoted_message_id">
+                </div>
+                <form method="POST" id="message-form">
+                    {% csrf_token %}
+                    <div class="message-input-container">
+                        <input type="text" name="message" id="message-input" placeholder="Type your message..." autocomplete="off">
+                        <div class="emoji-picker">
+                            <button type="button" class="emoji-button" onclick="toggleEmojiPicker()">😊</button>
+                            <div class="emoji-popup" id="emoji-popup">
+                                <div class="emoji-grid">
+                                    <div class="emoji" onclick="addEmoji('😊')">😊</div>
+                                    <div class="emoji" onclick="addEmoji('😂')">😂</div>
+                                    <div class="emoji" onclick="addEmoji('😍')">😍</div>
+                                    <div class="emoji" onclick="addEmoji('🤔')">🤔</div>
+                                    <div class="emoji" onclick="addEmoji('😎')">😎</div>
+                                    <div class="emoji" onclick="addEmoji('👍')">👍</div>
+                                    <div class="emoji" onclick="addEmoji('❤️')">❤️</div>
+                                    <div class="emoji" onclick="addEmoji('😁')">😁</div>
+                                    <div class="emoji" onclick="addEmoji('😉')">😉</div>
+                                    <div class="emoji" onclick="addEmoji('🎉')">🎉</div>
+                                    <div class="emoji" onclick="addEmoji('🔥')">🔥</div>
+                                    <div class="emoji" onclick="addEmoji('😀')">😀</div>
+                                    <div class="emoji" onclick="addEmoji('👋')">👋</div>
+                                    <div class="emoji" onclick="addEmoji('👏')">👏</div>
+                                    <div class="emoji" onclick="addEmoji('🙏')">🙏</div>
+                                    <div class="emoji" onclick="addEmoji('💯')">💯</div>
+                                    <div class="emoji" onclick="addEmoji('🤣')">🤣</div>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <button type="submit">Send</button>
-            </form>
+                    <button type="submit">Send</button>
+                </form>
+            </div>
         </div>
     </div>
 
