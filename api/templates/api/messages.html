@@ -10,54 +10,122 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
-    <div class="chat-container">
-
-        <div class="channel-header">
-            <!--<h1 id="channel-name">Channel Name</h1>-->
-            <h1 id="channel-name"> {{ channel_name }}</h1>
+    <header id="topbar">
+        <div class="top-bar-content">
+            <div class="logo-name">
+                <img src="{% static 'logo/pixelcut-export.png' %}" style="width: 100px; height: 45px" alt="logo">
+                <span>Chat Haven</span>
+            </div>
         </div>
+    </header>
 
-        <div class="message-container" id="message-container">
-            <!-- where the messages should be loaded i hope -->
-            {% for message in messages %}
-                <div class="message-content" id="message-{{ message.id }}">
-                <div class="message">
-                    <p><strong>{{ message.username }}:</strong> {{ message.message }}</p>
+    <div class="page-container">
+        <nav id="sidebar">
+        <ul>
+            <li>
+                <span class="name-app" style="font-weight: 600; font-size: 20px">Dashboard</span>
+                <button id="toggle-btn">
+                    <img src="{% static 'icons/arrowleft-icon.svg' %}" alt="SVG Icon">
+                </button>
+            </li>
+
+            <li>
+                <a href="{% url 'dashboard-admin' %}">
+                    <img src="{% static 'icons/home-icon.svg' %}" alt="SVG Icon">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'dm_list' %}">
+                    <img src="{% static 'icons/dm-icon.svg' %}" alt="DMs">
+                    <span>Dms</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'notifications' %}" class="{% if pending_requests|length > 0 %}has-pending{% endif %}">
+                    <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon" class="notification-icon">
+                    <span>Notification</span>
+                </a>
+            </li>
+            <li>
+                <a href="">
+                    <img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon">
+                    <span>Profile</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="">
+                    <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
+                    <span>Workspace</span>
+                </a>
+            </li>
+
+        </ul>
+        </nav>
+
+        <main id="channelbar">
+            <div class="container-channels">
+                <div class="workspace-name">My Channels</div>
+                <div class="channels">
+                    {% for channel in channels %}
+                        <div class="channel-item" id="channel-{{ channel.id }}">
+                            <a href="{% url 'messages' channel.id %}" class="channel-link">
+                                <div class="channel"># {{ channel.name }}</div>
+                            </a>
+                        </div>
+                    {% empty %}
+                        <p>No channels yet.</p>
+                    {% endfor %}
                 </div>
-                <div class="message-settings">
-                    {% if user_role == "admin" or message.user_id == user_uuid %}
-                    <button class="settings-btn" onclick="toggleDeleteWindow('{{ message.id }}', this)">
-                        <img src="{% static 'icons/menu.png' %}" alt="SVG Icon">
-                    </button>
+            </div>
+        </main>
 
-                    <div class="delete-window" id="delete-window-{{ message.id }}" style="display: none">
+        <div class="chat-container">
+            <div class="channel-header">
+                <h1 id="channel-name"> {{ channel_name }}</h1>
+            </div>
 
-                        <form method="POST" action="{% url 'delete-message' message.id %}" >
-                            {% csrf_token %}
-                            <input type="hidden" name="channel_id" value="{{ channel_id }}">
-                            <button type="submit">Delete</button>
-                        </form>
+            <div class="message-container" id="message-container">
+                {% for message in messages %}
+                    <div class="message-content" id="message-{{ message.id }}">
+                    <div class="message">
+                        <p><strong>{{ message.username }}:</strong> {{ message.message }}</p>
+                    </div>
+                    <div class="message-settings">
+                        {% if user_role == "admin" or message.user_id == user_uuid %}
+                        <button class="settings-btn" onclick="toggleDeleteWindow('{{ message.id }}', this)">
+                            <img src="{% static 'icons/menu.png' %}" alt="SVG Icon">
+                        </button>
+
+                        <div class="delete-window" id="delete-window-{{ message.id }}" style="display: none">
+
+                            <form method="POST" action="{% url 'delete-message' message.id %}" >
+                                {% csrf_token %}
+                                <input type="hidden" name="channel_id" value="{{ channel_id }}">
+                                <button type="submit">Delete</button>
+                            </form>
+
+                        </div>
 
                     </div>
+                        {% endif %}
+                    </div>
+                {% empty %}
+                <p>It's quiet in here...</p>
+                {% endfor %}
+            </div>
 
-                </div>
-                    {% endif %}
-                </div>
-            {% empty %}
-            <p>It's quiet in here...</p>
-            {% endfor %}
-        </div>
+            <div class="message-input">
+                <form method="POST">
+                    {% csrf_token %}
+                        <input type="text" name="message" placeholder="Type your message...">
+                        <button type="submit">Send</button>
+                </form>
 
-        <div class="message-input">
-            <form method="POST">
-                {% csrf_token %}
-                    <input type="text" name="message" placeholder="Type your message...">
-                    <button type="submit">Send</button>
-            </form>
-
+            </div>
         </div>
     </div>
-
 <script defer>
   function toggleDeleteWindow(messageId, button) {
         // Hide other settings windows
@@ -167,6 +235,99 @@ async function fetchUserStatuses() {
 setInterval(fetchUserStatuses, 5000);
 fetchUserStatuses();
 
+</script>
+
+<script defer>
+    document.addEventListener("DOMContentLoaded", function() {
+        const toggleButton = document.getElementById('toggle-btn');
+        const sidebar = document.getElementById('sidebar');
+
+        toggleButton.addEventListener("click", function() {
+        sidebar.classList.toggle('close');
+        toggleButton.classList.toggle('rotate');
+
+         });
+
+    });
+
+    function toggleSettingsWindow(channelId, button) {
+        document.querySelectorAll('.settings-window').forEach(window => {
+        if (window.id !== "settings-window-" + channelId) {
+            window.style.display = "none";
+        }
+    });
+    let settingsWindow = document.getElementById("settings-window-" + channelId);
+    let gearIcon = button.querySelector("img"); // Select the gear icon inside the button
+
+    if (settingsWindow.style.display === "block") {
+        settingsWindow.style.display = "none";
+        gearIcon.classList.remove("rotate-gear"); // Reset rotation
+        return;
+    } else {
+        settingsWindow.style.display = "block";
+        gearIcon.classList.add("rotate-gear"); // Rotate when opening
+    }
+
+    // Get button position
+    let rect = button.getBoundingClientRect();
+
+    // Position settings window to the right of the button
+    settingsWindow.style.position = "absolute";
+    settingsWindow.style.left = `${rect.right + window.scrollX + 10}px`; // Shift right
+    settingsWindow.style.top = `${rect.top + window.scrollY}px`; // Align with button
+
+    // Close when clicking outside
+    document.addEventListener("click", function(event) {
+        if (!settingsWindow.contains(event.target) && !button.contains(event.target)) {
+            settingsWindow.style.display = "none";
+            gearIcon.classList.remove("rotate-gear"); // Reset rotation when closing
+        }
+    }, { once: true });
+}
+
+function confirmDelete() {
+    return confirm('Are you sure you want to delete this channel?');
+}
+
+function openDeleteModal(actionUrl) {
+    let modal = document.getElementById("delete-modal");
+    let form = document.getElementById("delete-form");
+
+    form.action = actionUrl; // Set form action dynamically
+    modal.style.display = "flex";
+}
+
+function closeModal() {
+    document.getElementById("delete-modal").style.display = "none";
+}
+
+// Close when clicking outside modal
+window.onclick = function(event) {
+    let modal = document.getElementById("delete-modal");
+    if (event.target === modal) {
+        closeModal();
+    }
+};
+
+    function openAddModal(actionUrl) {
+    let modal = document.getElementById("add-member-modal");
+    let form = document.getElementById("add-member-form");
+
+    form.action = actionUrl; // Set the form action dynamically
+    modal.style.display = "flex";
+}
+
+function closeAddModal() {
+    document.getElementById("add-member-modal").style.display = "none";
+}
+
+// Close modal when clicking outside
+window.onclick = function (event) {
+    let modal = document.getElementById("add-member-modal");
+    if (event.target === modal) {
+        closeAddModal();
+    }
+};
 </script>
 
 </body>

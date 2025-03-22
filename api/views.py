@@ -320,43 +320,109 @@ def view_channel(request, channel_id):
 
 @supabase_login_required
 def messages_view(request, channel_id):
-    user_uuid = request.session['user_uuid']
-    member_check = supabase_client.table("channel_members").select("id").eq("user_id", user_uuid).eq("channel_id", channel_id).execute()
-    created_by_check = supabase_client.table("channels").select("created_by").eq("id", channel_id).single().execute()
-    if not member_check.data and not created_by_check.data:
-        return HttpResponse("Access Denied: You are not a member of this channel", status=403)
-
-    if request.method == 'POST':
-        content = request.POST.get('message')
         user_uuid = request.session['user_uuid']
-        username = request.session['username']
+        #user_role = request.session['user_role']
+        member_check = supabase_client.table("channel_members").select("id").eq("user_id", user_uuid).eq("channel_id", channel_id).execute()
+        created_by_check = supabase_client.table("channels").select("created_by").eq("id", channel_id).single().execute()
 
-        print("inserting in db")
-        #create a try-catch if there's an issue
-        response = supabase_client.table('channel_messages').insert({
-            "user_id": user_uuid,
-            "channel_id": str(channel_id),
-            "message": content,
-            "created_at": datetime.now().isoformat(),
-            "username": username
-        }).execute()
+        if not member_check.data and not created_by_check.data:
+            return HttpResponse("Access Denied: You are not a member of this channel", status=403)
 
-        print(response)
+        if request.method == 'POST':
+            content = request.POST.get('message')
+            user_uuid = request.session['user_uuid']
+            username = request.session['username']
 
-        return redirect('messages', channel_id=channel_id)
+            try:
+                supabase_client.table('channel_messages').insert({
+                    "user_id": user_uuid,
+                    "channel_id": str(channel_id),
+                    "message": content,
+                    "created_at": datetime.now().isoformat(),
+                    "username": username
+                }).execute()
 
-#used to fetch messages from a channel
-    message = supabase_client.table('channel_messages').select('message, username, id').eq('channel_id', channel_id).execute()
+                return redirect('messages', channel_id=channel_id)
 
-    channel = supabase_client.table('channels').select('name').eq('id', channel_id).single().execute()
-    channel_name = channel.data['name'] if channel.data else "Unknown Channel"
+            except APIError as e:
+                messages.error(request, "Failed to send message.")
+                return redirect('messages', channel_id=channel_id)
 
-    context = {
-        'messages': message.data,
-        'channel_id': channel_id,
-        'channel_name': channel_name
-    }
-    return render(request, "api/messages.html", context)
+
+
+
+        message_query = supabase_client.table('channel_messages').select('message, username, id').eq('channel_id', channel_id).execute()
+
+
+        channel_query = supabase_client.table('channels').select('name').eq('id', channel_id).single().execute()
+        channel_name = channel_query.data['name'] if channel_query.data else "Unknown Channel"
+
+
+        try:
+            user_channels_query = (
+                supabase_client
+                .table("channel_members")
+                .select("channel_id")
+                .eq("user_id", user_uuid)
+                .execute()
+            )
+
+            user_channel_ids = [entry["channel_id"] for entry in
+                                user_channels_query.data] if user_channels_query.data else []
+
+            admin_channels_query = (
+                supabase_client
+                .table("channels")
+                .select("id")
+                .eq("created_by", user_uuid)
+                .execute()
+            )
+
+            admin_channel_ids = [entry["id"] for entry in
+                                 admin_channels_query.data] if admin_channels_query.data else []
+
+            # Fetch all general channels
+            general_channels_query = (
+                supabase_client
+                .table("channels")
+                .select("id")
+                .like("name", "GENERAL-%")
+                .execute()
+            )
+
+            general_channel_ids = [entry["id"] for entry in
+                                   general_channels_query.data] if general_channels_query.data else []
+
+            all_channel_ids = list(set(user_channel_ids + admin_channel_ids + general_channel_ids))
+
+            if not all_channel_ids:
+                return render(request, "api/dashboard-admin.html",
+                              {"channels": [], "user_role": user_role})  # No channels found
+
+            channels_query = (
+                supabase_client
+                .table("channels")
+                .select("id, name, created_by")
+                .in_("id", all_channel_ids)
+                .execute()
+            )
+
+            channels = channels_query.data if channels_query.data else []
+
+        except APIError:
+            channels = []
+
+
+
+        context = {
+            'messages': message_query.data,
+            'channel_id': channel_id,
+            'channel_name': channel_name,
+            'channels': channels,
+        }
+
+        return render(request, "api/messages.html", context)
+
 
 @supabase_login_required
 def delete_message(request, message_id):
