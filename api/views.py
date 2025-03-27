@@ -240,9 +240,17 @@ def notification_view(request):
             .eq("status", "pending") \
             .execute().data
 
+        # Get join channel requests sent from an admin:
+        admin_requests = supabase_client.table("channels_requests") \
+            .select("id, channel_id, user_id, requested_at, status, user:user_id(username), channel:channel_id(name)") \
+            .eq("member_id", user_uuid) \
+            .eq("status", "admin_request") \
+            .execute().data
+
         return render(request, "api/notifications.html", {
             "user": request.user,
-            "pending_requests": pending_requests
+            "pending_requests": pending_requests,
+            "admin_requests": admin_requests
         })
 
     except APIError:
@@ -574,11 +582,12 @@ def add_member(request, channel_id):
         if user_response.data and len(user_response.data) > 0:
             user_id = user_response.data[0]['id']
 
-            # Add the user to the channel_members table
-            response = supabase_client.table("channel_members").insert({
-                "user_id": user_id,
+            # Send a request to that user
+            response = supabase_client.table("channels_requests").insert({
+                "user_id": current_user_uuid,
+                "member_id": user_id,
                 "channel_id": str(channel_id),
-                "added_by": current_user_uuid
+                "status": "admin_request"
             }).execute()
 
             if response.data:
@@ -627,6 +636,18 @@ def approve_request(request, request_id):
         "channel_id": req["channel_id"],
         "user_id": req["user_id"],
         "added_by": user_uuid
+    }).execute()
+    supabase_client.table("channels_requests").delete().eq("id", str(request_id)).execute()
+    return redirect('notifications')
+
+def join_channel(request, request_id):
+    # Automatically add user to channel_members
+    admin_id = request.session['user_uuid']
+    req = supabase_client.table("channels_requests").select("channel_id, member_id").eq("id", str(request_id)).single().execute().data
+    supabase_client.table("channel_members").insert({
+        "channel_id": req["channel_id"],
+        "user_id": req["member_id"],
+        "added_by": admin_id
     }).execute()
     supabase_client.table("channels_requests").delete().eq("id", str(request_id)).execute()
     return redirect('notifications')

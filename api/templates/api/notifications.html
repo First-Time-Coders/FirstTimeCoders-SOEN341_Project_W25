@@ -80,12 +80,37 @@
             <div class="notifications">
                 {% for request in pending_requests %}
                 <div class="request-item">
-                    <p>User {{ request.user.username }} wants to join channel {{ request.channel.name }}</p>
+                    <p>{{ request.user.username }} wants to join {{ request.channel.name }}</p>
 
                     <!-- Approve and Reject forms -->
                     <form method="post" action="{% url 'approve-request' request.id %}">
                         {% csrf_token %}
                         <button type="submit">Approve</button>
+                    </form>
+                    <form method="post" action="{% url 'reject-request' request.id %}">
+                        {% csrf_token %}
+                        <button type="submit">Reject</button>
+                    </form>
+                </div>
+                {% empty %}
+                <p>No pending requests.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+
+    <main id="notifications_2">
+        <div class="container-channels">
+            <div class="workspace-name">Join Channel Requests</div>
+            <div class="notifications">
+                {% for request in admin_requests %}
+                <div class="request-item">
+                    <p>{{ request.user.username }} wants you to join {{ request.channel.name }}</p>
+
+                    <!-- Approve and Reject forms -->
+                    <form method="post" action="{% url 'join-channel' request.id %}">
+                        {% csrf_token %}
+                        <button type="submit">Join Channel</button>
                     </form>
                     <form method="post" action="{% url 'reject-request' request.id %}">
                         {% csrf_token %}

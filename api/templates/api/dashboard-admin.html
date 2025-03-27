@@ -357,7 +357,7 @@ window.onclick = function (event) {
         <form id="add-member-form" method="POST">
             {% csrf_token %}
             <input type="text" name="username" placeholder="Username" required />
-            <button type="submit" class="confirm-add">Add</button>
+            <button type="submit" class="confirm-add">Send Request</button>
             <button type="button" class="cancel-add" onclick="closeAddModal()">Cancel</button>
         </form>
     </div>
