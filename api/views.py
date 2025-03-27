@@ -598,12 +598,6 @@ def add_member(request, channel_id):
                 "status": "admin_request"
             }).execute()
 
-            messages.error(request, "Failed to add member.")
-            return redirect('dashboard-admin')
-
-        messages.error(request, "User not found.")
-        return redirect('dashboard-admin')
-
     return redirect('dashboard-admin')
 
 def leave_channel(request, channel_id):
