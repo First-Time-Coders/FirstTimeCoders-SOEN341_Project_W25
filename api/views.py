@@ -321,7 +321,6 @@ def view_channel(request, channel_id):
 @supabase_login_required
 def messages_view(request, channel_id):
         user_uuid = request.session['user_uuid']
-        #user_role = request.session['user_role']
         member_check = supabase_client.table("channel_members").select("id").eq("user_id", user_uuid).eq("channel_id", channel_id).execute()
         created_by_check = supabase_client.table("channels").select("created_by").eq("id", channel_id).single().execute()
 
@@ -397,7 +396,7 @@ def messages_view(request, channel_id):
 
             if not all_channel_ids:
                 return render(request, "api/dashboard-admin.html",
-                              {"channels": [], "user_role": user_role})  # No channels found
+                              {"channels": []})  # No channels found
 
             channels_query = (
                 supabase_client
