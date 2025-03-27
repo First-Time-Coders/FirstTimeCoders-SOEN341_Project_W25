@@ -48,7 +48,7 @@
                 </a>
             </li>
             <li>
-                <a href="{% url 'notifications' %}" class="{% if pending_requests|length > 0 %}has-pending{% endif %}">
+                <a href="{% url 'notifications' %}" class="{% if pending_requests|length > 0 or admin_requests|length > 0%}has-pending{% endif %}">
                     <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon" class="notification-icon">
                     <span>Notification</span>
                 </a>
@@ -57,13 +57,6 @@
                 <a href="">
                     <img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon">
                     <span>Profile</span>
-                </a>
-            </li>
-
-            <li>
-                <a href="">
-                    <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
-                    <span>Workspace</span>
                 </a>
             </li>
 

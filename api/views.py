@@ -212,6 +212,13 @@ def dashboard_admin_view(request):
             .eq("status", "pending") \
             .execute().data
 
+        # Get join channel requests sent from an admin:
+        admin_requests = supabase_client.table("channels_requests") \
+            .select("id, channel_id, user_id, requested_at, status, user:user_id(username), channel:channel_id(name)") \
+            .eq("member_id", user_uuid) \
+            .eq("status", "admin_request") \
+            .execute().data
+
     except APIError:
         channels = []
         users = []
@@ -222,7 +229,8 @@ def dashboard_admin_view(request):
         "user_role": user_role,
         "users": users,
         "joinable_channels": joinable_channels,
-        "pending_requests": pending_requests
+        "pending_requests": pending_requests,
+        "admin_requests": admin_requests
     })
 
 def notification_view(request):
@@ -589,10 +597,6 @@ def add_member(request, channel_id):
                 "channel_id": str(channel_id),
                 "status": "admin_request"
             }).execute()
-
-            if response.data:
-                messages.success(request, "User added successfully!")
-                return redirect('dashboard-admin')
 
             messages.error(request, "Failed to add member.")
             return redirect('dashboard-admin')

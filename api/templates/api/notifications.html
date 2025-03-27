@@ -38,31 +38,25 @@
                 </a>
             </li>
 
-            <li class="active">
-                <a href="{% url 'notifications' %}" class="{% if pending_requests|length > 0 %}has-pending{% endif %}">
-                    <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon" class="notification-icon">
-                    <span>Notification</span>
-                </a>
-            </li>
-
             <li>
-                <a href="">
+                <a href="{% url 'dm_list' %}">
                     <img src="{% static 'icons/dm-icon.svg' %}" alt="SVG Icon">
                     <span>Dms</span>
                 </a>
             </li>
 
+            <li class="active">
+                <a href="{% url 'notifications' %}" class="{% if pending_requests|length > 0 or admin_requests|length > 0%}has-pending{% endif %}">
+                    <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon" class="notification-icon">
+                    <span>Notification</span>
+                </a>
+            </li>
+
+
             <li>
                 <a href="">
                     <img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon">
                     <span>Profile</span>
-                </a>
-            </li>
-
-            <li>
-                <a href="">
-                    <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
-                    <span>Workspace</span>
                 </a>
             </li>
 
