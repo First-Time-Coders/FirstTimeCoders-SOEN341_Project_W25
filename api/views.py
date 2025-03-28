@@ -404,6 +404,24 @@ def delete_message(request, message_id):
 @supabase_login_required
 def dm_list_view(request):
     user_uuid = request.session['user_uuid']
+
+    # Fetch channels created by admin:
+    admin_channels = supabase_client.table("channels").select("id").eq("created_by", user_uuid).execute().data
+    admin_channel_ids = [c["id"] for c in admin_channels]
+
+    # Get pending requests directed to the creator:
+    pending_requests = supabase_client.table("channels_requests") \
+        .select("id, channel_id, user_id, requested_at, status, user:user_id(username), channel:channel_id(name)") \
+        .in_("channel_id", admin_channel_ids) \
+        .eq("status", "pending") \
+        .execute().data
+
+    # Get join channel requests sent from an admin:
+    admin_requests = supabase_client.table("channels_requests") \
+        .select("id, channel_id, user_id, requested_at, status, user:user_id(username), channel:channel_id(name)") \
+        .eq("member_id", user_uuid) \
+        .eq("status", "admin_request") \
+        .execute().data
     try:
         # Fetch conversations where the user is either user1 or user2
         conversations = supabase_client.table("Conversations Table").select("id, user1_id, user2_id").or_(
@@ -421,11 +439,32 @@ def dm_list_view(request):
         messages.error(request, "Failed to load DMs")
         dm_list = []
 
-    return render(request, "api/dm_list.html", {"dm_list": dm_list})
+    return render(request, "api/dm_list.html", {
+        "dm_list": dm_list,
+        "pending_requests": pending_requests,
+        "admin_requests": admin_requests})
 
 @supabase_login_required
 def dm_view(request, conversation_id):
     user_uuid = request.session['user_uuid']
+
+    # Fetch channels created by admin:
+    admin_channels = supabase_client.table("channels").select("id").eq("created_by", user_uuid).execute().data
+    admin_channel_ids = [c["id"] for c in admin_channels]
+
+    # Get pending requests directed to the creator:
+    pending_requests = supabase_client.table("channels_requests") \
+        .select("id, channel_id, user_id, requested_at, status, user:user_id(username), channel:channel_id(name)") \
+        .in_("channel_id", admin_channel_ids) \
+        .eq("status", "pending") \
+        .execute().data
+
+    # Get join channel requests sent from an admin:
+    admin_requests = supabase_client.table("channels_requests") \
+        .select("id, channel_id, user_id, requested_at, status, user:user_id(username), channel:channel_id(name)") \
+        .eq("member_id", user_uuid) \
+        .eq("status", "admin_request") \
+        .execute().data
 
     try:
         # Fetch conversations where the user is either user1 or user2
@@ -512,7 +551,9 @@ def dm_view(request, conversation_id):
             "conversation_id": conversation_id,
             "chat_messages": chat_messages,
             "other_user": other_user,
-            "dm_list": dm_list
+            "dm_list": dm_list,
+            "pending_requests": pending_requests,
+            "admin_requests": admin_requests
         })
 
     except Exception as e:

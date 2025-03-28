@@ -95,7 +95,7 @@
 
     <main id="notifications_2">
         <div class="container-channels">
-            <div class="workspace-name">Join Channel Requests</div>
+            <div class="workspace-name">Channel Invitations</div>
             <div class="notifications">
                 {% for request in admin_requests %}
                 <div class="request-item">
@@ -112,7 +112,7 @@
                     </form>
                 </div>
                 {% empty %}
-                <p>No pending requests.</p>
+                <p>No channel invitations.</p>
                 {% endfor %}
             </div>
         </div>
