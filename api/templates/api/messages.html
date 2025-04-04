@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
     {% load static %}
-    <meta http-equiv="refresh" content="5">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Message</title>
     <link rel="stylesheet" href="{% static 'css/message.css' %}">
     <script src="https://onpkg.com/htmx.org@1.9.5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
     <div class="chat-container">
@@ -94,6 +94,79 @@
 
         document.addEventListener("click", handleClickOutside);
     }
+</script>
+
+<script> //This script is used to update user status in real-time
+const supabaseUrl = 'https://rsdvkupcprtchpzuxgtd.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzZHZrdXBjcHJ0Y2hwenV4Z3RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwODEyNDIsImV4cCI6MjA1MzY1NzI0Mn0.9SQn2rXp4j6p8Em_FVhEHukZdzpYqV4lF5T8PT_gVAc'; // Replace with your actual key
+const supabase_client = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function updateUserStatus(status) {
+  const now = new Date().toISOString();
+  const { data, error } = await supabase_client
+    .from('user_activity')
+    .upsert({
+      user_id: '{{ user_id }}',
+      status: status,
+      last_seen: now,
+      updated_at: now
+    });
+
+  if (error) {
+    console.error("Error updating status:", error);
+  }
+}
+
+updateUserStatus("online");
+
+let idleTimer;
+function resetActivity() {
+  clearTimeout(idleTimer);
+  updateUserStatus("online");
+  idleTimer = setTimeout(() => { updateUserStatus("away"); }, 5000);
+}
+
+document.addEventListener("visibilitychange", () => {
+  updateUserStatus(document.visibilityState === "hidden" ? "away" : "online");
+});
+window.addEventListener("beforeunload", () => updateUserStatus("offline"));
+window.addEventListener("mousemove", resetActivity);
+window.addEventListener("keydown", resetActivity);
+window.addEventListener("scroll", resetActivity);
+window.addEventListener("focus", resetActivity);
+window.addEventListener("resize", resetActivity);
+window.addEventListener("click", resetActivity);
+window.addEventListener("wheel", resetActivity);
+window.addEventListener("touchstart", resetActivity);
+window.addEventListener("focusin", resetActivity);
+window.addEventListener("focusout", () => updateUserStatus("offline"));
+
+resetActivity();
+
+// Poll every 5 seconds to update user status from Supabase
+async function fetchUserStatuses() {
+  const { data, error } = await supabase_client.from("user_activity").select("*");
+
+  if (error) console.error("Failed to fetch user statuses:", error);
+
+  data.forEach((user) => {
+    const userStatusEl = document.getElementById(`status-${user.user_id}`);
+    if (userStatusEl) {
+      userStatusEl.className = 'user-status';
+      userStatusEl.style.backgroundColor =
+        user.status === "online"
+          ? "#4CAF50" // Green
+          : user.status === "away"
+          ? "#FFA500" // Orange
+          : "#808080"; // Gray
+    }
+  });
+}
+
+// Fetch statuses every 5 seconds
+setInterval(fetchUserStatuses, 5000);
+fetchUserStatuses();
+
 </script>
 
 </body>
