@@ -30,3 +30,6 @@ jobs:
           pip install flake8
           flake8
 
+      - name: Run tests for implemented features
+          run: |
+            python manage.py test
