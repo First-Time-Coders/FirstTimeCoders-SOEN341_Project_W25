@@ -280,7 +280,7 @@ def create_channel(request):
                 "name": name,
                 "description": description,
                 "created_by": user_uuid,
-                "created_at": datetime.datetime.now().isoformat()
+                "created_at": datetime.now().isoformat()
             }).execute()
 
             return redirect('dashboard-admin')
