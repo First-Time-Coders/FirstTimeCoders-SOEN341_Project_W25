@@ -421,6 +421,8 @@ justify-content: center;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    overflow-y: auto;
+    height: 70%;
 }
 
 .channel {
@@ -510,7 +512,7 @@ a:visited {
     border-bottom: none;
 }
 
-/* User list with 60% height and scroll */
+/* User list with 70% height and scroll */
 .users-list {
     display: flex;
     flex-direction: column;

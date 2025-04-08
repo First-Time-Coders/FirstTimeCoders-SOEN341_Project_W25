@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Message</title>
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/message.css' %}">
     <script src="https://onpkg.com/htmx.org@1.9.5"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
@@ -14,11 +15,10 @@
         <div class="top-bar-content">
             <div class="logo-name">
                 <img src="{% static 'logo/pixelcut-export.png' %}" style="width: 100px; height: 45px" alt="logo">
-                <span>Chat Haven</span>
+                <span>ChatHaven</span>
             </div>
         </div>
     </header>
-
     <div class="page-container">
         <nav id="sidebar">
         <ul>
@@ -28,7 +28,6 @@
                     <img src="{% static 'icons/arrowleft-icon.svg' %}" alt="SVG Icon">
                 </button>
             </li>
-
             <li>
                 <a href="{% url 'dashboard-admin' %}">
                     <img src="{% static 'icons/home-icon.svg' %}" alt="SVG Icon">
@@ -53,14 +52,12 @@
                     <span>Profile</span>
                 </a>
             </li>
-
             <li>
                 <a href="">
                     <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
                     <span>Workspace</span>
                 </a>
             </li>
-
         </ul>
         </nav>
 
@@ -73,6 +70,21 @@
                             <a href="{% url 'messages' channel.id %}" class="channel-link">
                                 <div class="channel"># {{ channel.name }}</div>
                             </a>
+                        <div class="channel-settings">
+                            {% if user_role == 'admin' %}
+                            <button class="settings-btn" onclick="toggleSettingsWindow('{{ channel.id }}', this)">
+                                <img src="{% static 'icons/settings2.svg' %}" alt="SVG Icon" class="gear-icon">
+                            </button>
+                            {% endif %}
+                            <div class="settings-window" id="settings-window-{{ channel.id }}" style="display: none;">
+                                <button class="add-btn" onclick="openAddModal('{% url 'add-member' channel.id %}')">Add Member</button>
+                                <button class="del-btn" onclick="openDeleteModal('{% url 'delete-channel' channel.id %}')" id="del-btn">Delete</button>
+                                <form action="{% url 'leave-channel' channel.id %}" method="post" onsubmit="return confirm('Are you sure you want to leave this channel?');">
+                                    {% csrf_token %}
+                                    <button type="submit">Leave Channel</button>
+                                </form>
+                            </div>
+                        </div>
                         </div>
                     {% empty %}
                         <p>No channels yet.</p>
@@ -85,47 +97,110 @@
             <div class="channel-header">
                 <h1 id="channel-name"> {{ channel_name }}</h1>
             </div>
-
             <div class="message-container" id="message-container">
                 {% for message in messages %}
-                    <div class="message-content" id="message-{{ message.id }}">
-                    <div class="message">
-                        <p><strong>{{ message.username }}:</strong> {{ message.message }}</p>
-                    </div>
-                    <div class="message-settings">
-                        {% if user_role == "admin" or message.user_id == user_uuid %}
-                        <button class="settings-btn" onclick="toggleDeleteWindow('{{ message.id }}', this)">
-                            <img src="{% static 'icons/menu.png' %}" alt="SVG Icon">
-                        </button>
-
-                        <div class="delete-window" id="delete-window-{{ message.id }}" style="display: none">
-
-                            <form method="POST" action="{% url 'delete-message' message.id %}" >
-                                {% csrf_token %}
-                                <input type="hidden" name="channel_id" value="{{ channel_id }}">
-                                <button type="submit">Delete</button>
-                            </form>
-
-                        </div>
-
-                    </div>
+                    <div class="message {% if message.user_id == request.session.user_uuid %}sent-message{% else %}received-message{% endif %}">
+                        {% if message.quoted_message_id and message.quoted_author and message.quoted_content %}
+                            <div class="message-quote">
+                                <div class="quoted-author">{{ message.quoted_author }}</div>
+                                <div class="quoted-content">{{ message.quoted_content }}</div>
+                            </div>
                         {% endif %}
+                        <p>
+                            <strong>{{ message.username }}:</strong>
+                            {{ message.message }}
+                            <span class="timestamp">{{ message.created_at|date:"M d, g:i A" }}</span>
+                        </p>
+                        <div class="message-actions">
+                            <!--{% if user_role == "admin" or message.user_id == user_uuid %}
+                            <button class="settings-btn" onclick="toggleDeleteWindow('{{ message.id }}', this)">
+                                <img src="{% static 'icons/menu.png' %}" alt="SVG Icon">
+                            </button>
+                            <div class="delete-window" id="delete-window-{{ message.id }}" style="display: none">
+                                <form method="POST" action="{% url 'delete-message' message.id %}" >
+                                    {% csrf_token %}
+                                    <input type="hidden" name="channel_id" value="{{ channel_id }}">
+                                    <button type="submit">Delete</button>
+                                </form>
+                            </div>
+                            {% endif %}-->
+                            <button class="reply-button" onclick="replyToMessage('{{ message.id }}', '{{ message.username }}', '{{ message.message }}')">
+                                Reply
+                            </button>
+                        </div>
                     </div>
                 {% empty %}
-                <p>It's quiet in here...</p>
+                    <p>It's quiet in here...</p>
                 {% endfor %}
             </div>
-
-            <div class="message-input">
-                <form method="POST">
+                <div class="message-input">
+                <div id="quote-container" class="quote-container">
+                    <button class="close-quote" onclick="cancelReply()">×</button>
+                    <div class="quote-author" id="quote-author"></div>
+                    <div class="quote-content" id="quote-content"></div>
+                    <input type="hidden" id="quoted-message-id" name="quoted_message_id">
+                </div>
+                <form method="POST" id="message-form">
                     {% csrf_token %}
-                        <input type="text" name="message" placeholder="Type your message...">
-                        <button type="submit">Send</button>
+                    <div class="message-input-container">
+                        <input type="text" name="message" id="message-input" placeholder="Type your message...">
+                        <div class="emoji-picker">
+                            <button type="button" class="emoji-button" onclick="toggleEmojiPicker()">😊</button>
+                            <div class="emoji-popup" id="emoji-popup">
+                                <div class="emoji-grid">
+                                    <div class="emoji" onclick="addEmoji('😊')">😊</div>
+                                    <div class="emoji" onclick="addEmoji('😂')">😂</div>
+                                    <div class="emoji" onclick="addEmoji('😍')">😍</div>
+                                    <div class="emoji" onclick="addEmoji('🤔')">🤔</div>
+                                    <div class="emoji" onclick="addEmoji('😎')">😎</div>
+                                    <div class="emoji" onclick="addEmoji('👍')">👍</div>
+                                    <div class="emoji" onclick="addEmoji('❤️')">❤️</div>
+                                    <div class="emoji" onclick="addEmoji('😁')">😁</div>
+                                    <div class="emoji" onclick="addEmoji('😉')">😉</div>
+                                    <div class="emoji" onclick="addEmoji('🎉')">🎉</div>
+                                    <div class="emoji" onclick="addEmoji('🔥')">🔥</div>
+                                    <div class="emoji" onclick="addEmoji('😀')">😀</div>
+                                    <div class="emoji" onclick="addEmoji('👋')">👋</div>
+                                    <div class="emoji" onclick="addEmoji('👏')">👏</div>
+                                    <div class="emoji" onclick="addEmoji('🙏')">🙏</div>
+                                    <div class="emoji" onclick="addEmoji('💯')">💯</div>
+                                    <div class="emoji" onclick="addEmoji('🤣')">🤣</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit">Send</button>
                 </form>
-
             </div>
         </div>
     </div>
+
+    <div id="delete-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h2>Delete Channel</h2>
+        <p>Are you sure you want to delete this channel?</p>
+        <form id="delete-form" method="POST">
+            {% csrf_token %}
+            <button type="submit" class="confirm-delete">Delete</button>
+            <button type="button" class="cancel-delete" onclick="closeModal()">Cancel</button>
+        </form>
+    </div>
+</div>
+
+<div id="add-member-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h2>Add Member</h2>
+        <p>Enter the username of the member you want to add:</p>
+        <form id="add-member-form" method="POST">
+            {% csrf_token %}
+            <input type="text" name="username" placeholder="Username" required />
+            <button type="submit" class="confirm-add">Add</button>
+            <button type="button" class="cancel-add" onclick="closeAddModal()">Cancel</button>
+        </form>
+    </div>
+</div>
+
+
 <script defer>
   function toggleDeleteWindow(messageId, button) {
         // Hide other settings windows
@@ -329,6 +404,93 @@ window.onclick = function (event) {
     }
 };
 </script>
+
+    <script>
+        // Auto-scroll to bottom of messages on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const messageContainer = document.getElementById('message-container');
+            messageContainer.scrollTop = messageContainer.scrollHeight;
+        });
+
+        // Reply functionality
+        function replyToMessage(messageId, username, content) {
+            // Truncate long messages in the quote display
+            const truncatedContent = content.length > 60 ? content.substring(0, 60) + '...' : content;
+
+            // Show quote container
+            document.getElementById('quote-container').style.display = 'block';
+            document.getElementById('quote-author').textContent = username;
+            document.getElementById('quote-content').textContent = truncatedContent;
+            document.getElementById('quoted-message-id').value = messageId;
+
+            // Focus input field
+            document.getElementById('message-input').focus();
+        }
+
+        function cancelReply() {
+            document.getElementById('quote-container').style.display = 'none';
+            document.getElementById('quoted-message-id').value = '';
+        }
+
+        // Add hidden inputs for quoted message when form is submitted
+        document.getElementById('message-form').addEventListener('submit', function(e) {
+            const quotedMessageId = document.getElementById('quoted-message-id').value;
+
+            if (quotedMessageId) {
+                // If replying to a message, add the quoted info to the form
+                const quoteAuthorEl = document.getElementById('quote-author');
+                const quoteContentEl = document.getElementById('quote-content');
+
+                const authorInput = document.createElement('input');
+                authorInput.type = 'hidden';
+                authorInput.name = 'quoted_author';
+                authorInput.value = quoteAuthorEl.textContent;
+
+                const contentInput = document.createElement('input');
+                contentInput.type = 'hidden';
+                contentInput.name = 'quoted_content';
+                contentInput.value = quoteContentEl.textContent;
+
+                const messageIdInput = document.createElement('input');
+                messageIdInput.type = 'hidden';
+                messageIdInput.name = 'quoted_message_id';
+                messageIdInput.value = quotedMessageId;
+
+                this.appendChild(authorInput);
+                this.appendChild(contentInput);
+                this.appendChild(messageIdInput);
+            }
+        });
+
+        // Emoji picker functionality
+        function toggleEmojiPicker() {
+            const picker = document.getElementById('emoji-popup');
+            picker.style.display = picker.style.display === 'block' ? 'none' : 'block';
+
+            // Close emoji picker when clicking outside
+            if (picker.style.display === 'block') {
+                document.addEventListener('click', closeEmojiPickerOutside);
+            } else {
+                document.removeEventListener('click', closeEmojiPickerOutside);
+            }
+        }
+
+        function closeEmojiPickerOutside(event) {
+            const picker = document.getElementById('emoji-popup');
+            const button = document.querySelector('.emoji-button');
+
+            if (!picker.contains(event.target) && event.target !== button) {
+                picker.style.display = 'none';
+                document.removeEventListener('click', closeEmojiPickerOutside);
+            }
+        }
+
+        function addEmoji(emoji) {
+            const input = document.getElementById('message-input');
+            input.value += emoji;
+            input.focus();
+        }
+    </script>
 
 </body>
 </html>

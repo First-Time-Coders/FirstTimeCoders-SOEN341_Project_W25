@@ -104,9 +104,9 @@
                 {% endfor %}
             </div>
         {% if user_role == 'admin' %}
-            <form>
-                <button class="create-channel" formaction="{% url 'create-channel' %}">+ Create a Channel</button>
-            </form>
+            <div>
+                <button class="create-channel" onclick="openCreateModal('{% url 'create-channel' %}')" id="create-btn">+ Create a Channel</button>
+            </div>
         {% endif %}
         </div>
     </main>
@@ -314,7 +314,7 @@ window.onclick = function(event) {
     }
 };
 
-    function openAddModal(actionUrl) {
+function openAddModal(actionUrl) {
     let modal = document.getElementById("add-member-modal");
     let form = document.getElementById("add-member-form");
 
@@ -334,7 +334,25 @@ window.onclick = function (event) {
     }
 };
 
+function openCreateModal(actionUrl) {
+    let modal = document.getElementById("create-channel-modal");
+    let form = document.getElementById("create-channel-form");
 
+    form.action = actionUrl; // Set the form action dynamically
+    modal.style.display = "flex";
+}
+
+function closeCreateModal() {
+    document.getElementById("create-channel-modal").style.display = "none";
+}
+
+// Close modal when clicking outside
+window.onclick = function (event) {
+    let modal = document.getElementById("create-channel-modal");
+    if (event.target === modal) {
+        closeCreateModal();
+    }
+};
 
 </script>
 
@@ -359,6 +377,19 @@ window.onclick = function (event) {
             <input type="text" name="username" placeholder="Username" required />
             <button type="submit" class="confirm-add">Add</button>
             <button type="button" class="cancel-add" onclick="closeAddModal()">Cancel</button>
+        </form>
+    </div>
+</div>
+
+<div id="create-channel-modal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+        <h2>Create a Channel</h2>
+        <form id="create-channel-form" method="POST">
+            {% csrf_token %}
+            <input type="text" name="name" placeholder="Channel Name" required />
+            <input type="text" name="description" placeholder="Description">
+            <button type="submit" class="confirm-create">Create</button>
+            <button type="button" class="cancel-create" onclick="closeCreateModal()">Cancel</button>
         </form>
     </div>
 </div>
