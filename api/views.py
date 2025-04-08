@@ -182,7 +182,8 @@ def dashboard_admin_view(request):
                 .execute()
         )
 
-        general_channel_ids = [entry["id"] for entry in general_channels_query.data] \
+        general_channel_ids = [entry["id"] for entry in \
+            general_channels_query.data] \
             if general_channels_query.data else []
 
         all_channel_ids = list(set(user_channel_ids + admin_channel_ids + general_channel_ids))
