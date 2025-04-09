@@ -22,7 +22,7 @@
 
 </header>
 <div class="page-container">
-<nav id="sidebar">
+    <nav id="sidebar">
         <ul>
             <li>
                 <span class="name-app" style="font-weight: 600; font-size: 20px">Dashboard</span>
@@ -30,11 +30,6 @@
                     <img src="{% static 'icons/arrowleft-icon.svg' %}" alt="SVG Icon">
                 </button>
             </li>
-
-               <!-- <a href="">
-                    <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
-                    <span>Workspace</span>
-                </a>-->
             <li class="active">
                 <a href="">
                     <img src="{% static 'icons/home-icon.svg' %}" alt="SVG Icon">
@@ -59,14 +54,12 @@
                     <span>Profile</span>
                 </a>
             </li>
-
             <li>
                 <a href="">
                     <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
                     <span>Workspace</span>
                 </a>
             </li>
-
             <div class="logout">
                 <form>
                     <button id="logout-button" formaction="{% url 'logout' %}">Logout</button>
