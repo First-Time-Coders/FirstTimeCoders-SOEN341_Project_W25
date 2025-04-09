@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI</title>
+    <link rel="stylesheet" href="{% static 'css/message.css' %}">
+    <script src="https://onpkg.com/htmx.org@1.9.5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+<h1>Chat with AI</h1>
+
+    <form method="post">
+        {% csrf_token %}
+      <label>
+        <textarea name="message" placeholder="Enter your message here..."></textarea>
+      </label>
+      <br>
+        <button type="submit">Send</button>
+    </form>
+
+    {% if error %}
+        <p style="color:red;">Error: {{ error }}</p>
+    {% endif %}
+
+    <h2>Chat History</h2>
+    <div>
+        {% for message in messages %}
+            <p><strong>You:</strong> {{ message.message }}</p>
+            <p><strong>AI:</strong> {{ message.response }}</p>
+            <hr>
+        {% endfor %}
+    </div>
+</body>
+</html>

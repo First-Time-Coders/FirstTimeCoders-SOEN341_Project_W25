@@ -1,5 +1,7 @@
 import datetime
 from http.client import responses
+import openai
+from django.conf import settings
 
 #test pipeline3
 
@@ -26,6 +28,7 @@ import os
 SUPABASE_URL = "https://rsdvkupcprtchpzuxgtd.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzZHZrdXBjcHJ0Y2hwenV4Z3RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwODEyNDIsImV4cCI6MjA1MzY1NzI0Mn0.9SQn2rXp4j6p8Em_FVhEHukZdzpYqV4lF5T8PT_gVAc"
 
+openai.api_key = settings.OPENAI_API_KEY
 # Initialize Supabase client
 supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -694,3 +697,59 @@ def join_channel(request, request_id):
 def reject_request(request, request_id):
     supabase_client.table("channels_requests").delete().eq("id", str(request_id)).execute()
     return redirect('notifications')
+
+#new feature
+@supabase_login_required
+def ai_chat_view(request):
+    user_id = request.session['user_uuid']
+    username = request.session['username']
+
+    # Fetch user AI chat history
+    history_query = supabase_client \
+        .table("ai_messages") \
+        .select("message, response") \
+        .eq("user_id", user_id) \
+        .order("created_at", desc=False) \
+        .execute()
+
+    message_history = history_query.data or []
+
+    conversation_history = []
+    for pair in message_history:
+        conversation_history.append({"role": "user", "content": pair["message"]})
+        if pair["response"]:
+            conversation_history.append({"role": "assistant", "content": pair["response"]})
+
+    if request.method == "POST":
+        prompt = request.POST.get("message")
+
+        try:
+            # Send the request to OpenAI API for chat completion
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",  # You can replace this with any model of your choice
+                messages=conversation_history + [{"role": "user", "content": prompt}]
+            )
+
+            ai_response = response['choices'][0]['message']['content']
+
+            # Save both the prompt and AI response in the Supabase database
+            supabase_client.table("ai_messages").insert({
+                "user_id": user_id,
+                "message": prompt,
+                "response": ai_response,
+                "created_at": datetime.now().isoformat()
+            }).execute()
+
+            return redirect("ai-chat")
+
+        except Exception as e:
+            return render(request, "api/ai_chat.html", {
+                "messages": message_history,
+                "error": str(e)
+            })
+
+    # Render AI chat page with the history
+    context = {
+        "messages": message_history,
+    }
+    return render(request, "api/ai_chat.html", context)
