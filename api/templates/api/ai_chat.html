@@ -6,32 +6,85 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>AI</title>
     <link rel="stylesheet" href="{% static 'css/message.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <script src="https://onpkg.com/htmx.org@1.9.5"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 <body>
-<h1>Chat with AI</h1>
+<header id="topbar">
+    <div class="top-bar-content">
+        <div class="logo-name">
+            <img src="{% static 'logo/pixelcut-export.png' %}" style="width: 100px; height: 45px" alt="logo">
+            <span>Chat Haven</span>
+        </div>
+    </div>
 
-    <form method="post">
-        {% csrf_token %}
-      <label>
-        <textarea name="message" placeholder="Enter your message here..."></textarea>
-      </label>
-      <br>
-        <button type="submit">Send</button>
-    </form>
+</header>
+<div class="page-container">
+<nav id="sidebar">
+    <ul>
+        <li>
+            <span class="name-app" style="font-weight: 600; font-size: 20px">Dashboard</span>
+            <button id="toggle-btn">
+                <img src="{% static 'icons/arrowleft-icon.svg' %}" alt="SVG Icon">
+            </button>
+        </li>
 
-    {% if error %}
-        <p style="color:red;">Error: {{ error }}</p>
-    {% endif %}
-
-    <h2>Chat History</h2>
-    <div>
-        {% for message in messages %}
-            <p><strong>You:</strong> {{ message.message }}</p>
-            <p><strong>AI:</strong> {{ message.response }}</p>
-            <hr>
-        {% endfor %}
+           <!-- <a href="">
+                <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
+                <span>Workspace</span>
+            </a>-->
+        <li class="active">
+            <a href="">
+                <img src="{% static 'icons/home-icon.svg' %}" alt="SVG Icon">
+                <span>Home</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'dm_list' %}">
+                <img src="{% static 'icons/dm-icon.svg' %}" alt="DMs">
+                <span>Dms</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'notifications' %}" class="{% if pending_requests|length > 0 or admin_requests|length > 0%}has-pending{% endif %}">
+                <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon" class="notification-icon">
+                <span>Notification</span>
+            </a>
+        </li>
+        <li>
+            <a href="">
+                <img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon">
+                <span>Profile</span>
+            </a>
+        </li>
+        <div class="logout">
+            <form>
+                <button id="logout-button" formaction="{% url 'logout' %}">Logout</button>
+            </form>
+        </div>
+    </ul>
+</nav>
+    <div class="chat-container">
+        <div class="channel-header">
+            <h1 id="channel-name">
+                <span class="status-indicator status-online"></span>
+                {{ other_user }}
+            </h1>
+        </div>
+        <div class="message-container" id="message-container">
+            {% for message in messages %}
+                <div class="sent-message"><p><strong>You:</strong> {{message.message}}</p></div>
+                <div class="received-message"><p><strong>AI:</strong> {{message.response}}</p></div>
+            {% empty %}
+                <p>Start the conversation!</p>
+            {% endfor %}
+            <form method="post">
+                {% csrf_token %}
+                <input type="text" name="message" id="message-input" placeholder="Type your message..." autocomplete="off">
+                <button type="submit">Send</button>
+            </form>
+        </div>
     </div>
 </body>
 </html>
