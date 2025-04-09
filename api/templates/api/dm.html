@@ -246,6 +246,14 @@
                     <span class="timestamp">{{ message.created_at|date:"M d, g:i A" }}</span>
                 </p>
                 <div class="message-actions">
+                     {% if user_role == "admin" or message.user_id == user_uuid %}
+                        <form method="POST" action="{% url 'delete-message' message.id %}" >
+                            {% csrf_token %}
+                            <input type="hidden" name="message_type" value="dm">
+                            <input type="hidden" name="conversation_id" value="{{ conversation_id }}">
+                            <button type="submit">Delete</button>
+                        </form>
+                    {% endif %}
                     <button class="reply-button" onclick="replyToMessage('{{ message.id }}', '{{ message.username }}', '{{ message.content }}')">
                         Reply
                     </button>

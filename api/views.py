@@ -204,7 +204,7 @@ def dashboard_admin_view(request):
 
         # Fetch all channels
         all_channels = supabase_client.table("channels").select("id, name, created_by").execute().data
-        joinable_channels = [ch for ch in all_channels if ch["id"] not in user_channel_ids and ch["created_by"] != user_uuid]
+        joinable_channels = [ch for ch in all_channels if ch["id"] not in user_channel_ids and ch["created_by"] != user_uuid and not( ch["name"].startswith("GENERAL-"))]
 
         pending_requests = supabase_client.table("channels_requests") \
             .select("id, channel_id, user_id, requested_at, status, user:user_id(username), channel:channel_id(name)") \
@@ -417,29 +417,59 @@ def messages_view(request, channel_id):
 @supabase_login_required
 def delete_message(request, message_id):
     if request.method == 'POST':
-        channel_id = request.POST.get('channel_id')
+        message_type = request.POST.get('message_type')
         user_uuid = request.session.get('user_uuid')
         user_role = request.session.get('role')
 
+        print("DEBUG: conversation_id:", request.POST.get('conversation_id'), "channel_id:", request.POST.get('channel_id'))
+
         try:
-            message_query = supabase_client.table("channel_messages").select("id", "user_id").eq("id", message_id).single().execute()
-            message = message_query.data
+            if message_type == "channel":
+                channel_id = request.POST.get('channel_id')
+                message_query = supabase_client.table("channel_messages").select("id", "user_id").eq("id", message_id).single().execute()
+                message = message_query.data
 
-            if not message:
-                message.error(request, "Message not found")
-                return redirect('messages', channel_id=channel_id)
+                if not message:
+                    message.error(request, "Message not found")
+                    return redirect('messages', channel_id=channel_id)
 
-            if user_role == 'admin' or (user_role == "member" and message["user_id"] == user_uuid):
-                supabase_client.table('channel_messages').delete().eq('id', message_id).execute()
-                messages.success(request, "Message deleted successfully")
+                if user_role == 'admin' or (user_role == "member" and message["user_id"] == user_uuid):
+                    supabase_client.table('channel_messages').delete().eq('id', message_id).execute()
+                    messages.success(request, "Message deleted successfully")
+                else:
+                    messages.error(request, "You do not have permission to delete this message.")
+
+                return redirect('messages', channel_id=request.POST.get('channel_id'))
+
+            elif message_type == "dm":
+                conversation_id = request.POST.get('conversation_id')
+                message_query = supabase_client.table("Messages Table").select("id", "sender_id").eq("id", message_id).single().execute()
+                message = message_query.data
+
+                if not message:
+                    messages.error(request, "Message not found")
+                    return redirect('dm', conversation_id=conversation_id)
+
+                if user_role == 'admin' or (user_role == "member" and message["sender_id"] == user_uuid):
+                    supabase_client.table('Messages Table').delete().eq('id', message_id).execute()
+                    messages.success(request, "Message deleted successfully")
+                else:
+                    messages.error(request, "You do not have permission to delete this message.")
+
+                return redirect('dm', conversation_id=request.POST.get('conversation_id'))
+
             else:
-                messages.error(request, "You do not have permission to delete this message.")
+                messages.error(request, "Invalid message type.")
+                return redirect('dashboard-admin')  # fallback redirect
 
         except APIError as e:
             messages.error(request, "Failed to delete message")
-            return redirect('messages', channel_id=channel_id)
+            if message_type == 'channel':
+                return redirect('messages', channel_id=request.POST.get('channel_id'))
+            elif message_type == 'dm':
+                return redirect('dm', conversation_id=request.POST.get('conversation_id'))
 
-    return redirect('messages', channel_id=request.POST.get('channel_id'))
+    return redirect('dashboard-admin')
 
 @supabase_login_required
 def dm_list_view(request):

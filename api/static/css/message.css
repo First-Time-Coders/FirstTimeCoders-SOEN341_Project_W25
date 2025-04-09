@@ -401,6 +401,19 @@ a {
     transition: background 0.3s ease;
 }
 
+.message-actions button {
+            background: none;
+            border: none;
+            color: #0F3923;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 2px 5px;
+}
+
+.message-actions button:hover {
+            text-decoration: underline;
+}
+
 .timestamp {
     font-size: 0.8em;
     color: #888;

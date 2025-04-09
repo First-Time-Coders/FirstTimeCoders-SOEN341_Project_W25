@@ -116,7 +116,7 @@
 <div class="info-container">
     <div class="channel-info-container">
         <div class="workspace-name">Joinable Channels</div>
-        <div class="channels">
+        <div class="joinable-channels">
             {% for channel in joinable_channels %}
             <div class="join-channel-item">
                 <div class="item-channel"># {{ channel.name }}</div>
@@ -135,8 +135,11 @@
         <div class="users-list">
             {% for user in users %}
                 <div class="user-item" id="user-"{{ user.id }}>
-                    <button class="user-name">{{ user.username }}</button>
-                    <span class="user-status" id="status-{{user.id}}" ></span>
+                    <div class="user-name">{{ user.username }}</div>
+                    <div style="display: flex; align-items: center; justify-content: right;">
+                        <span class="last-seen" id="last-seen-{{ user.id }}" style="font-size: 0.5em; color: #888;"></span>
+                        <span class="user-status" id="status-{{user.id}}" ></span>
+                    </div>
                 </div>
             {% empty %}
                 <p>No users yet.</p>
@@ -225,14 +228,41 @@ async function fetchUserStatuses() {
 
   data.forEach((user) => {
     const userStatusEl = document.getElementById(`status-${user.user_id}`);
-    if (userStatusEl) {
+    const lastSeenEl = document.getElementById(`last-seen-${user.user_id}`);
+
+    if (userStatusEl && lastSeenEl) {
       userStatusEl.className = 'user-status';
-      userStatusEl.style.backgroundColor =
-        user.status === "online"
-          ? "#4CAF50" // Green
-          : user.status === "away"
-          ? "#FFA500" // Orange
-          : "#808080"; // Gray
+      lastSeenEl.textContent = '';
+
+      if (user.status === "online") {
+        userStatusEl.style.backgroundColor = "#4CAF50"; // Green
+      } else if (user.status === "away") {
+        userStatusEl.style.backgroundColor = "#FFA500"; // Orange
+      } else {
+        userStatusEl.style.backgroundColor = "#808080"; // Gray
+
+        if (user.last_seen) {
+          const lastSeenDate = new Date(user.last_seen);
+          const now = new Date();
+          const diffInSeconds = Math.floor((now - lastSeenDate) / 1000);
+
+          let formatted = '';
+          if (diffInSeconds < 60) {
+            formatted = `${diffInSeconds}s ago`;
+          } else if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            formatted = `${minutes}m ago`;
+          } else if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            formatted = `${hours}h ago`;
+          } else {
+            const days = Math.floor(diffInSeconds / 86400);
+            formatted = `${days}d ago`;
+          }
+
+          lastSeenEl.textContent = `Active ${formatted}`;
+        }
+      }
     }
   });
 }
