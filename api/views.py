@@ -21,14 +21,16 @@ from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
 from supabase import create_client, Client
 from django.contrib.auth.hashers import make_password
-import os
 
+from dotenv import load_dotenv
+import os
 
 # Load Supabase credentials
 SUPABASE_URL = "https://rsdvkupcprtchpzuxgtd.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzZHZrdXBjcHJ0Y2hwenV4Z3RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwODEyNDIsImV4cCI6MjA1MzY1NzI0Mn0.9SQn2rXp4j6p8Em_FVhEHukZdzpYqV4lF5T8PT_gVAc"
 
-openai.api_key = settings.OPENAI_API_KEY
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
 # Initialize Supabase client
 supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
 

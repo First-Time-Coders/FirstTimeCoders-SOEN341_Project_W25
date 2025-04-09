@@ -71,7 +71,7 @@
         <div class="container-channels">
             <div class="workspace-name">My Channels</div>
             <div class="channels">
-                 <a href="{% url 'ai-chat' %}">AI Chat</a>
+                 <a href="{% url 'ai-chat' %}"># AI Chat</a>
                 {% for channel in channels %}
                     <div class="channel-item" id="channel-{{ channel.id }}">
                         <a href="{% url 'messages' channel.id %}" class="channel-link">
