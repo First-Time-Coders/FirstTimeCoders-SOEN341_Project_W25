@@ -289,7 +289,7 @@ def create_channel(request):
             }).execute()
 
             if response.data:
-                messages.success(request, "User added successfully!")
+                messages.success(request, "Channel created successfully!")
                 return redirect('dashboard-admin')
 
         except APIError as e:
@@ -375,6 +375,16 @@ def messages_view(request, channel_id):
         message_query = supabase_client.table('channel_messages').select('*').eq('channel_id', channel_id).execute()
         messages = message_query.data if message_query.data else []
 
+        users = supabase_client.table("channel_members").select("user_id").eq("channel_id", channel_id).execute()
+        user_ids = [user["user_id"] for user in users.data]
+        channel_data = supabase_client.table("channels").select("created_by").eq("id", channel_id).single().execute()
+        creator_id = channel_data.data["created_by"]
+        user_ids.append(creator_id)
+        members = supabase_client.table("users").select("id, username").in_("id", user_ids).execute()
+        channel_members = [{"user_id": member["id"], "username": member["username"]} for member in members.data]
+
+        print("DEBUG: Channel Members:", channel_members)
+
         chat_messages = []
         for message in messages:
             sender_id = message.get('user_id')
@@ -427,12 +437,14 @@ def messages_view(request, channel_id):
             'channel_name': channel_name,
             'channels': channels,
             'user_role': request.session.get('role'),
+            'channel_members': channel_members,
+            'user_id': user_uuid,
         }
         return render(request, "api/messages.html", context)
 
     except Exception as e:
         print(f"DEBUG: Exception in messages_view: {str(e)}")
-        return HttpResponse(f"Error: {str(e)}. <a href='/api/channels/'>Back to Channels</a>")
+        return HttpResponse(f"Error: {str(e)}. <a href='/api/dashboard-admin/'>Back to Dashboard</a>")
 
 
 @supabase_login_required

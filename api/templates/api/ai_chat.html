@@ -34,8 +34,8 @@
                 <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
                 <span>Workspace</span>
             </a>-->
-        <li class="active">
-            <a href="">
+        <li>
+            <a href="{% url 'dashboard-admin' %}">
                 <img src="{% static 'icons/home-icon.svg' %}" alt="SVG Icon">
                 <span>Home</span>
             </a>
@@ -68,8 +68,7 @@
     <div class="chat-container">
         <div class="channel-header">
             <h1 id="channel-name">
-                <span class="status-indicator status-online"></span>
-                {{ other_user }}
+                Chat with AI
             </h1>
         </div>
         <div class="message-container" id="message-container">

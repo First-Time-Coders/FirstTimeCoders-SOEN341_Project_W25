@@ -163,24 +163,6 @@ a {
     flex-direction: column;
 }
 
-.container-channels {
-    width: 250px;
-    background-color: #F8F8F8;
-    opacity: .9;
-    color:  #1C1C1E;
-    height:100vh;
-    padding: .79em;
-
-}
-
-.channel-item {
-    display:flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-}
-
-
 .settings-btn {
     background: #0F3923;
     border-radius: 10vw;
@@ -214,26 +196,21 @@ a {
 .chat-container {
     display: flex;
     flex-direction: column;
-    height: 87dvh;
-    width: 100vw;
-    margin: 0 auto;
-    padding: 20px;
+    height: 90dvh;
+    width: 68%;
+    padding: .79em;
     background-color: #FAFAFA;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 
 }
 
-
-
-/* Channel Header */
-.channel-header {
-    border-bottom: 2px solid #f1f1f1;
-}
-
-#channel-name {
-    font-size: 24px;
-    font-weight: 600;
-    color: #333;
+.channel-info-container{
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: .79em;
+    background-color: #F8F8F8;
+    width: 70%;
 }
 
 /* Message Container */
@@ -423,28 +400,6 @@ a {
 a {
     text-decoration: none;
     color: #0F3923;
-}
-
-
-.channels {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.channel {
-    padding: 8px;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 200px;
-    transition: background 0.3s ease;
-    background-color: #F5F5F5;
-}
-
-
-.channel:hover {
-    background-color: #0F3923;
-    color: #F5F5F5;
 }
 
 .workspace-name {
