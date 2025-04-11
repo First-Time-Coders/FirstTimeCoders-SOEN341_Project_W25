@@ -12,23 +12,22 @@ class LogoutTestCase(TestCase):
     def setUp(self):
         self.client = Client()
 
-    def test_logout_view(self):
+    def test_logout_view_saf1(self):
         session = self.client.session
-        session['user_uuid'] = 'uuid123'
+        session['user_uuid'] = 'saf1-id'
+        session['username'] = 'Saf'
+        session['role'] = 'Admin'
         session.save()
 
         response = self.client.get(reverse('logout'))
+
         self.assertNotIn('user_uuid', self.client.session)
+        self.assertNotIn('username', self.client.session)
+        self.assertNotIn('role', self.client.session)
+
         self.assertRedirects(response, reverse('login'))
 
 
-from unittest.mock import patch
-from django.test import TestCase, Client
-from django.urls import reverse
-
-from unittest.mock import patch
-from django.test import TestCase, Client
-from django.urls import reverse
 
 class ProfileViewTestCase(TestCase):
     def setUp(self):
