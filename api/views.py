@@ -856,3 +856,157 @@ def ai_chat_view(request):
         "messages": message_history,
     }
     return render(request, "api/ai_chat.html", context)
+
+def profile_view(request):
+    user_id = request.session.get('user_uuid')  # Récupérer l'UUID de l'utilisateur
+
+    if not user_id:
+        return redirect('login')  # Rediriger si l'utilisateur n'est pas connecté
+
+    try:
+        # Récupérer les données de l'utilisateur depuis Supabase
+        response = supabase_client.table('users').select('*').eq('id', user_id).single().execute()
+
+        # DEBUG: Afficher les données récupérées pour voir les clés disponibles
+        print("DEBUG - User Data:", response.data)
+
+        if response.data:
+            user = response.data  # Récupérer les données utilisateur
+
+            # Vérifier les noms de colonnes exacts et les adapter si besoin
+            user_data = {
+                'first_name': user.get('first name', "N/A"),  # No underscore, space instead
+                'last_name': user.get('last name', "N/A"),  # No underscore, space instead
+                'email': user.get('email', 'N/A'),
+                'username': user.get('username', 'N/A'),
+                'gender': user.get('gender', 'N/A'),
+                'role': user.get('role', 'N/A'),
+                'age': user.get('age', 'N/A'),  # If "age" exists, otherwise remove this
+            }
+
+
+            return render(request, 'api/profile.html', {'user': user_data})
+        else:
+            return render(request, 'api/profile.html', {'error': 'User not found'})
+
+    except Exception as e:
+        print(f"Error fetching profile data: {e}")
+        return render(request, 'api/profile.html', {'error': 'An error occurred while fetching profile data'})
+
+
+
+
+
+
+
+
+
+def edit_profile_view(request):
+    user_id = request.session.get("user_uuid")  # Get user UUID from session
+
+    if not user_id:
+        messages.error(request, "You must be logged in to edit your profile.")
+        return redirect("login")
+
+    if request.method == "POST":
+        field = request.POST.get("field")
+        value = request.POST.get("value")
+
+        if not field or not value:
+            messages.error(request, "Invalid selection or empty value.")
+            return redirect("edit-profile")
+
+        supabase_fields = {
+            "first_name": "first name",
+            "last_name": "last name",
+            "email": "email",
+            "age": "age",
+            "gender": "gender",
+            "role": "role",
+            "username": "username"
+        }
+
+        if field not in supabase_fields:
+            messages.error(request, "Invalid field selection.")
+            return redirect("edit-profile")
+
+        db_field = supabase_fields[field]
+
+        # Validation
+        if field in ["first_name", "last_name"]:
+            if not value.replace(" ", "").isalpha():
+                messages.error(request, "Name should only contain letters.")
+                return redirect("edit-profile")
+        elif field == "age":
+            if not value.isdigit() or int(value) <= 0:
+                messages.error(request, "Enter a valid positive age.")
+                return redirect("edit-profile")
+            value = int(value)
+        elif field == "username":
+            if " " in value:
+                messages.error(request, "Username should not contain spaces.")
+                return redirect("edit-profile")
+        elif field == "gender":
+            if value not in ["Male", "Female", "Other"]:
+                messages.error(request, "Invalid gender selection.")
+                return redirect("edit-profile")
+        elif field == "role":
+            if value not in ["Admin", "User"]:
+                messages.error(request, "Invalid role selection.")
+                return redirect("edit-profile")
+
+        try:
+            update_response = supabase_client.table("users").update({db_field: value}).eq("id", user_id).execute()
+
+            if field == "email":
+                try:
+                    auth_response = supabase_client.auth.update_user({"email": value})
+                    if auth_response and "error" in auth_response:
+                        messages.error(request, "Failed to update authentication email.")
+                        return redirect("edit-profile")
+                except Exception as e:
+                    messages.error(request, f"Error updating email in authentication system: {str(e)}")
+                    return redirect("edit-profile")
+
+            if update_response.data:
+                messages.success(request, f"{db_field.capitalize()} updated successfully!")
+            else:
+                messages.error(request, "Failed to update profile.")
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+
+        return redirect("profile")
+
+    return render(request, "api/profile_edit.html")
+
+@supabase_login_required
+def remove_user_from_channel(request, channel_id):
+    if request.method == "POST":
+        username = request.POST.get("username")
+
+        if not username:
+            messages.error(request, "Username is required.")
+            return redirect("remove-user-from-channel", channel_id=channel_id)  # Redirect back to form
+
+        # Fetch the user_id from Supabase using the username
+        user_response = supabase_client.table("users").select("id").eq("username", username).execute()
+
+        if user_response.data and len(user_response.data) > 0:
+            user_id = user_response.data[0]['id']
+
+            # Remove the user from the channel_members table
+            response = supabase_client.table("channel_members").delete().match({
+                "user_id": user_id,
+                "channel_id": str(channel_id)
+            }).execute()
+
+            if response.data:
+                messages.success(request, "User removed successfully.")
+                return redirect("dashboard-admin")  # Redirect after success
+            else:
+                messages.error(request, "Error removing user.")
+        else:
+            messages.error(request, "User not found.")
+
+    # Render form for GET request
+    return render(request, "api/remove-user.html", {"channel_id": channel_id})
