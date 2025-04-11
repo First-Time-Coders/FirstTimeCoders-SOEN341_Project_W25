@@ -74,6 +74,5 @@ class AddMemberRequestTestCase(TestCase):
             reverse('add-member', args=[self.channel_id]),
             {'username': target_username}
         )
-
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('dashboard-admin'))
