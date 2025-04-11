@@ -51,15 +51,12 @@
                     <span>Notification</span>
                 </a>
             </li>
-
-
             <li>
-                <a href="">
+                <a href="{% url 'profile' %}">
                     <img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon">
                     <span>Profile</span>
                 </a>
             </li>
-
             <div class="logout">
                 <form>
                     <button id="logout-button" formaction="{% url 'logout' %}">Logout</button>
