@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>AI</title>
+    <link rel="stylesheet" href="{% static 'css/message.css' %}">
+    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <script src="https://onpkg.com/htmx.org@1.9.5"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+<header id="topbar">
+    <div class="top-bar-content">
+        <div class="logo-name">
+            <img src="{% static 'logo/pixelcut-export.png' %}" style="width: 100px; height: 45px" alt="logo">
+            <span>Chat Haven</span>
+        </div>
+    </div>
+
+</header>
+<div class="page-container" id="chat">
+<nav id="sidebar">
+    <ul>
+        <li>
+            <span class="name-app" style="font-weight: 600; font-size: 20px">Dashboard</span>
+            <button id="toggle-btn">
+                <img src="{% static 'icons/arrowleft-icon.svg' %}" alt="SVG Icon">
+            </button>
+        </li>
+
+           <!-- <a href="">
+                <img src="{% static 'icons/workspace-icon.svg' %}" alt="SVG Icon">
+                <span>Workspace</span>
+            </a>-->
+        <li>
+            <a href="{% url 'dashboard-admin' %}">
+                <img src="{% static 'icons/home-icon.svg' %}" alt="SVG Icon">
+                <span>Home</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'dm_list' %}">
+                <img src="{% static 'icons/dm-icon.svg' %}" alt="DMs">
+                <span>Dms</span>
+            </a>
+        </li>
+        <li>
+            <a href="{% url 'notifications' %}" class="{% if pending_requests|length > 0 or admin_requests|length > 0%}has-pending{% endif %}">
+                <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon" class="notification-icon">
+                <span>Notification</span>
+            </a>
+        </li>
+        <li>
+            <a href="">
+                <img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon">
+                <span>Profile</span>
+            </a>
+        </li>
+        <div class="logout">
+            <form>
+                <button id="logout-button" formaction="{% url 'logout' %}">Logout</button>
+            </form>
+        </div>
+    </ul>
+</nav>
+
+    <div class="chat-container">
+        <div class="channel-header">
+        <h1 id="channel-name">Chat with AI</h1>
+    </div>
+
+    <div class="message-container" id="message-container">
+        {% for message in messages %}
+            <div class="message sent-message">
+                <p>
+                    <strong>You:</strong> {{ message.message }}
+                </p>
+            </div>
+            <div class="message received-message">
+                <p>
+                    <strong>AI:</strong> {{ message.response }}
+                </p>
+            </div>
+        {% empty %}
+            <p>It's quiet in here...</p>
+        {% endfor %}
+        </div>
+        <div class="message-input">
+        <form method="POST" id="message-form">
+            {% csrf_token %}
+            <div class="message-input-container">
+                <input type="text" name="message" id="message-input" placeholder="Type your message..." autocomplete="off">
+            </div>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+    </div>
+
+
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const messageContainer = document.getElementById('message-container');
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+    });
+</script>
+</body>
+</html>

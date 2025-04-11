@@ -1,4 +1,7 @@
 import datetime
+from http.client import responses
+import openai
+from django.conf import settings
 
 #test pipeline3
 
@@ -12,12 +15,20 @@ from postgrest import APIError
 from .decorators import supabase_login_required
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
+from supabase import create_client, Client
+from django.contrib.auth.hashers import make_password
+
+from dotenv import load_dotenv
+import os
 
 
 # Load Supabase credentials
 SUPABASE_URL = "https://rsdvkupcprtchpzuxgtd.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzZHZrdXBjcHJ0Y2hwenV4Z3RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwODEyNDIsImV4cCI6MjA1MzY1NzI0Mn0.9SQn2rXp4j6p8Em_FVhEHukZdzpYqV4lF5T8PT_gVAc"
 
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
+print("DEBUG: OPENAI_API_KEY:", api_key)
 # Initialize Supabase client
 supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
 
@@ -201,12 +212,8 @@ def dashboard_admin_view(request):
         channels = channels_query.data if channels_query.data else []
 
         # Fetch all channels
-        all_channels = supabase_client \
-            .table("channels") \
-            .select("id, name, created_by") \
-            .execute().data
-
-        joinable_channels = [ch for ch in all_channels if ch["id"] not in user_channel_ids and ch["created_by"] != user_uuid]
+        all_channels = supabase_client.table("channels").select("id, name, created_by").execute().data
+        joinable_channels = [ch for ch in all_channels if ch["id"] not in user_channel_ids and ch["created_by"] != user_uuid and not( ch["name"].startswith("GENERAL-"))]
 
         pending_requests = supabase_client.table("channels_requests") \
             .select("id, channel_id, user_id, requested_at, status, user:user_id(username), channel:channel_id(name)") \
@@ -278,20 +285,22 @@ def create_channel(request):
         user_uuid = request.session['user_uuid']
 
         try:
-            supabase_client.table('channels').insert({
+            response = supabase_client.table('channels').insert({
                 "name": name,
                 "description": description,
                 "created_by": user_uuid,
                 "created_at": datetime.now().isoformat()
             }).execute()
 
-            return redirect('dashboard-admin')
+            if response.data:
+                messages.success(request, "Channel created successfully!")
+                return redirect('dashboard-admin')
 
         except APIError as e:
             messages.error(request, "Failed to create channel")
-            return redirect('create-channel')
+            return redirect('dashboard-admin')
 
-    return render(request, 'api/create-channel.html')
+    return redirect('dashboard-admin')
 
 @supabase_login_required
 def delete_channel(request, channel_id):
@@ -360,71 +369,153 @@ def messages_view(request, channel_id):
     if not member_check.data and not created_by_check.data:
         return HttpResponse("Access Denied: You are not a member of this channel", status=403)
 
-    if request.method == 'POST':
-        content = request.POST.get('message')
-        user_uuid = request.session['user_uuid']
-        username = request.session['username']
+        user_channels_query = supabase_client.table("channel_members").select("channel_id").eq("user_id",user_uuid).execute()
+        user_channel_ids = [entry["channel_id"] for entry in user_channels_query.data] if user_channels_query.data else []
 
-        print("inserting in db")
-        #create a try-catch if there's an issue
-        response = supabase_client.table('channel_messages').insert({
-            "user_id": user_uuid,
-            "channel_id": str(channel_id),
-            "message": content,
-            "created_at": datetime.now().isoformat(),
-            "username": username
-        }).execute()
+        admin_channels_query = supabase_client.table("channels").select("id").eq("created_by", user_uuid).execute()
+        admin_channel_ids = [entry["id"] for entry in admin_channels_query.data] if admin_channels_query.data else []
 
-        print(response)
+        general_channels_query = supabase_client.table("channels").select("id").like("name", "GENERAL-%").execute()
+        general_channel_ids = [entry["id"] for entry in general_channels_query.data] if general_channels_query.data else []
 
-        return redirect('messages', channel_id=channel_id)
+        all_channel_ids = list(set(user_channel_ids + admin_channel_ids + general_channel_ids))
 
-#used to fetch messages from a channel
-    message = supabase_client \
-        .table('channel_messages') \
-        .select('message, username, id') \
-        .eq('channel_id', channel_id) \
-        .execute()
+        channels_query = supabase_client.table("channels").select("id, name, created_by").in_("id",all_channel_ids).execute()
+        channels = channels_query.data if channels_query.data else []
 
-    channel = supabase_client.table('channels') \
-        .select('name')\
-        .eq('id', channel_id)\
-        .single().execute()
-    channel_name = channel.data['name'] if channel.data else "Unknown Channel"
+        channel_query = supabase_client.table('channels').select('name').eq('id', channel_id).single().execute()
+        channel_name = channel_query.data['name'] if channel_query.data else "Unknown Channel"
 
-    context = {
-        'messages': message.data,
-        'channel_id': channel_id,
-        'channel_name': channel_name
-    }
-    return render(request, "api/messages.html", context)
+        message_query = supabase_client.table('channel_messages').select('*').eq('channel_id', channel_id).order('created_at', desc=False).execute()
+        messages = message_query.data if message_query.data else []
+
+        users = supabase_client.table("channel_members").select("user_id").eq("channel_id", channel_id).execute()
+        user_ids = [user["user_id"] for user in users.data]
+        channel_data = supabase_client.table("channels").select("created_by").eq("id", channel_id).single().execute()
+        creator_id = channel_data.data["created_by"]
+        user_ids.append(creator_id)
+        members = supabase_client.table("users").select("id, username").in_("id", user_ids).execute()
+        channel_members = [{"user_id": member["id"], "username": member["username"]} for member in members.data]
+
+        chat_messages = []
+        for message in messages:
+            sender_id = message.get('user_id')
+            sender_query = supabase_client.table("users").select("username").eq("id", sender_id).single().execute()
+            sender_name = sender_query.data.get('username', "Unknown") if sender_query.data else "Unknown"
+            message['username'] = sender_name
+            chat_messages.append(message)
+
+
+        if request.method == 'POST':
+            content = request.POST.get('message')
+            username = request.session.get('username')
+            quoted_message_id = request.POST.get('quoted_message_id')
+            quoted_author = request.POST.get('quoted_author')
+            quoted_content = request.POST.get('quoted_content')
+
+            try:
+                message_data = {
+                    "channel_id": str(channel_id),
+                    "user_id": user_uuid,
+                    "message": content,
+                    "created_at": datetime.now().isoformat(),
+                }
+
+                if quoted_message_id:
+                    message_data = {
+                        "quoted_message_id": quoted_message_id,
+                        "quoted_author": quoted_author,
+                        "quoted_content": quoted_content
+                    }
+
+                supabase_client.table('channel_messages').insert({
+                    "channel_id": str(channel_id),
+                    "user_id": user_uuid,
+                    "message": content,
+                    "username": username,
+                    "created_at": datetime.now().isoformat(),
+                    "quoted_message_id": quoted_message_id,
+                    "quoted_author": quoted_author,
+                    "quoted_content": quoted_content
+                }).execute()
+                return redirect('messages', channel_id=channel_id)
+
+            except Exception as send_error:
+                print(f"DEBUG: Error sending message: {str(send_error)}")
+                return HttpResponse(f"Failed to send message: {str(send_error)}")
+
+        context = {
+            'messages': chat_messages,
+            'channel_id': channel_id,
+            'channel_name': channel_name,
+            'channels': channels,
+            'user_role': request.session.get('role'),
+            'channel_members': channel_members,
+            'user_id': user_uuid,
+        }
+        return render(request, "api/messages.html", context)
+
+    except Exception as e:
+        print(f"DEBUG: Exception in messages_view: {str(e)}")
+        return HttpResponse(f"Error: {str(e)}. <a href='/api/dashboard-admin/'>Back to Dashboard</a>")
+
 
 @supabase_login_required
 def delete_message(request, message_id):
     if request.method == 'POST':
-        channel_id = request.POST.get('channel_id')
+        message_type = request.POST.get('message_type')
         user_uuid = request.session.get('user_uuid')
         user_role = request.session.get('role')
 
+        print("DEBUG: conversation_id:", request.POST.get('conversation_id'), "channel_id:", request.POST.get('channel_id'))
+
         try:
-            message_query = supabase_client.table("channel_messages").select("id", "user_id").eq("id", message_id).single().execute()
-            message = message_query.data
+            if message_type == "channel":
+                channel_id = request.POST.get('channel_id')
+                message_query = supabase_client.table("channel_messages").select("id", "user_id").eq("id", message_id).single().execute()
+                message = message_query.data
 
-            if not message:
-                message.error(request, "Message not found")
-                return redirect('messages', channel_id=channel_id)
+                if not message:
+                    message.error(request, "Message not found")
+                    return redirect('messages', channel_id=channel_id)
 
-            if user_role == 'admin' or (user_role == "member" and message["user_id"] == user_uuid):
-                supabase_client.table('channel_messages').delete().eq('id', message_id).execute()
-                messages.success(request, "Message deleted successfully")
+                if user_role == 'admin' or (user_role == "member" and message["user_id"] == user_uuid):
+                    supabase_client.table('channel_messages').delete().eq('id', message_id).execute()
+                    messages.success(request, "Message deleted successfully")
+                else:
+                    messages.error(request, "You do not have permission to delete this message.")
+
+                return redirect('messages', channel_id=request.POST.get('channel_id'))
+
+            elif message_type == "dm":
+                conversation_id = request.POST.get('conversation_id')
+                message_query = supabase_client.table("Messages Table").select("id", "sender_id").eq("id", message_id).single().execute()
+                message = message_query.data
+
+                if not message:
+                    messages.error(request, "Message not found")
+                    return redirect('dm', conversation_id=conversation_id)
+
+                if user_role == 'admin' or (user_role == "member" and message["sender_id"] == user_uuid):
+                    supabase_client.table('Messages Table').delete().eq('id', message_id).execute()
+                    messages.success(request, "Message deleted successfully")
+                else:
+                    messages.error(request, "You do not have permission to delete this message.")
+
+                return redirect('dm', conversation_id=request.POST.get('conversation_id'))
+
             else:
-                messages.error(request, "You do not have permission to delete this message.")
+                messages.error(request, "Invalid message type.")
+                return redirect('dashboard-admin')  # fallback redirect
 
         except APIError as e:
             messages.error(request, "Failed to delete message")
-            return redirect('messages', channel_id=channel_id)
+            if message_type == 'channel':
+                return redirect('messages', channel_id=request.POST.get('channel_id'))
+            elif message_type == 'dm':
+                return redirect('dm', conversation_id=request.POST.get('conversation_id'))
 
-    return redirect('messages', channel_id=request.POST.get('channel_id'))
+    return redirect('dashboard-admin')
 
 @supabase_login_required
 def dm_list_view(request):
@@ -458,7 +549,8 @@ def dm_list_view(request):
             user_query = supabase_client.table("users").select("username").eq("id", other_user_id).single().execute()
             dm_list.append({
                 "conversation_id": conv['id'],
-                "other_user": user_query.data['username'] if user_query.data else "Unknown"
+                "other_user": user_query.data['username'] if user_query.data else "Unknown",
+                "other_user_id": other_user_id
             })
     except APIError as e:
         messages.error(request, "Failed to load DMs")
@@ -502,7 +594,8 @@ def dm_view(request, conversation_id):
             user_query = supabase_client.table("users").select("username").eq("id", other_user_id).single().execute()
             dm_list.append({
                 "conversation_id": conv['id'],
-                "other_user": user_query.data['username'] if user_query.data else "Unknown"
+                "other_user": user_query.data['username'] if user_query.data else "Unknown",
+                "other_user_id": other_user_id
             })
     except APIError as e:
         messages.error(request, "Failed to load DMs")
@@ -554,6 +647,7 @@ def dm_view(request, conversation_id):
                 message_data = {
                     "conversation_id": conversation_id,
                     "sender_id": user_uuid,
+                    "username": request.session.get('username'),
                     "content": content,
                     "created_at": datetime.now().isoformat(),
                     "is_read": False
@@ -578,7 +672,8 @@ def dm_view(request, conversation_id):
             "other_user": other_user,
             "dm_list": dm_list,
             "pending_requests": pending_requests,
-            "admin_requests": admin_requests
+            "admin_requests": admin_requests,
+            "user_uuid": user_uuid,
         })
 
     except Exception as e:
@@ -719,3 +814,213 @@ def join_channel(request, request_id):
 def reject_request(request, request_id):
     supabase_client.table("channels_requests").delete().eq("id", str(request_id)).execute()
     return redirect('notifications')
+
+#new feature
+@supabase_login_required
+def ai_chat_view(request):
+    user_id = request.session['user_uuid']
+    username = request.session['username']
+
+    # Fetch user AI chat history
+    history_query = supabase_client \
+        .table("ai_messages") \
+        .select("message, response") \
+        .eq("user_id", user_id) \
+        .order("created_at", desc=False) \
+        .execute()
+
+    message_history = history_query.data or []
+
+    conversation_history = []
+    for pair in message_history:
+        conversation_history.append({"role": "user", "content": pair["message"]})
+        if pair["response"]:
+            conversation_history.append({"role": "assistant", "content": pair["response"]})
+
+    if request.method == "POST":
+        prompt = request.POST.get("message")
+
+        try:
+            # Send the request to OpenAI API for chat completion
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",  # You can replace this with any model of your choice
+                messages=conversation_history + [{"role": "user", "content": prompt}]
+            )
+
+            ai_response = response['choices'][0]['message']['content']
+
+            # Save both the prompt and AI response in the Supabase database
+            supabase_client.table("ai_messages").insert({
+                "user_id": user_id,
+                "message": prompt,
+                "response": ai_response,
+                "created_at": datetime.now().isoformat()
+            }).execute()
+
+            return redirect("ai-chat")
+
+        except Exception as e:
+            return render(request, "api/ai_chat.html", {
+                "messages": message_history,
+                "error": str(e)
+            })
+
+    # Render AI chat page with the history
+    context = {
+        "messages": message_history,
+    }
+    return render(request, "api/ai_chat.html", context)
+
+def profile_view(request):
+    user_id = request.session.get('user_uuid')  # Récupérer l'UUID de l'utilisateur
+
+    if not user_id:
+        return redirect('login')  # Rediriger si l'utilisateur n'est pas connecté
+
+    try:
+        # Récupérer les données de l'utilisateur depuis Supabase
+        response = supabase_client.table('users').select('*').eq('id', user_id).single().execute()
+
+        # DEBUG: Afficher les données récupérées pour voir les clés disponibles
+        print("DEBUG - User Data:", response.data)
+
+        if response.data:
+            user = response.data  # Récupérer les données utilisateur
+
+            # Vérifier les noms de colonnes exacts et les adapter si besoin
+            user_data = {
+                'first_name': user.get('first name', "N/A"),  # No underscore, space instead
+                'last_name': user.get('last name', "N/A"),  # No underscore, space instead
+                'email': user.get('email', 'N/A'),
+                'username': user.get('username', 'N/A'),
+                'gender': user.get('gender', 'N/A'),
+                'role': user.get('role', 'N/A'),
+                'age': user.get('age', 'N/A'),  # If "age" exists, otherwise remove this
+            }
+
+
+            return render(request, 'api/profile.html', {'user': user_data})
+        else:
+            return render(request, 'api/profile.html', {'error': 'User not found'})
+
+    except Exception as e:
+        print(f"Error fetching profile data: {e}")
+        return render(request, 'api/profile.html', {'error': 'An error occurred while fetching profile data'})
+
+
+
+
+
+
+
+
+
+def edit_profile_view(request):
+    user_id = request.session.get("user_uuid")  # Get user UUID from session
+
+    if not user_id:
+        messages.error(request, "You must be logged in to edit your profile.")
+        return redirect("login")
+
+    if request.method == "POST":
+        field = request.POST.get("field")
+        value = request.POST.get("value")
+
+        if not field or not value:
+            messages.error(request, "Invalid selection or empty value.")
+            return redirect("edit-profile")
+
+        supabase_fields = {
+            "first_name": "first name",
+            "last_name": "last name",
+            "email": "email",
+            "age": "age",
+            "gender": "gender",
+            "role": "role",
+            "username": "username"
+        }
+
+        if field not in supabase_fields:
+            messages.error(request, "Invalid field selection.")
+            return redirect("edit-profile")
+
+        db_field = supabase_fields[field]
+
+        # Validation
+        if field in ["first_name", "last_name"]:
+            if not value.replace(" ", "").isalpha():
+                messages.error(request, "Name should only contain letters.")
+                return redirect("edit-profile")
+        elif field == "age":
+            if not value.isdigit() or int(value) <= 0:
+                messages.error(request, "Enter a valid positive age.")
+                return redirect("edit-profile")
+            value = int(value)
+        elif field == "username":
+            if " " in value:
+                messages.error(request, "Username should not contain spaces.")
+                return redirect("edit-profile")
+        elif field == "gender":
+            if value not in ["Male", "Female", "Other"]:
+                messages.error(request, "Invalid gender selection.")
+                return redirect("edit-profile")
+        elif field == "role":
+            if value not in ["Admin", "User"]:
+                messages.error(request, "Invalid role selection.")
+                return redirect("edit-profile")
+
+        try:
+            update_response = supabase_client.table("users").update({db_field: value}).eq("id", user_id).execute()
+
+            if field == "email":
+                try:
+                    auth_response = supabase_client.auth.update_user({"email": value})
+                    if auth_response and "error" in auth_response:
+                        messages.error(request, "Failed to update authentication email.")
+                        return redirect("edit-profile")
+                except Exception as e:
+                    messages.error(request, f"Error updating email in authentication system: {str(e)}")
+                    return redirect("edit-profile")
+
+            if update_response.data:
+                messages.success(request, f"{db_field.capitalize()} updated successfully!")
+            else:
+                messages.error(request, "Failed to update profile.")
+        except Exception as e:
+            messages.error(request, f"An error occurred: {str(e)}")
+
+        return redirect("profile")
+
+    return render(request, "api/profile_edit.html")
+
+@supabase_login_required
+def remove_user_from_channel(request, channel_id):
+    if request.method == "POST":
+        username = request.POST.get("username")
+
+        if not username:
+            messages.error(request, "Username is required.")
+            return redirect("remove-user-from-channel", channel_id=channel_id)  # Redirect back to form
+
+        # Fetch the user_id from Supabase using the username
+        user_response = supabase_client.table("users").select("id").eq("username", username).execute()
+
+        if user_response.data and len(user_response.data) > 0:
+            user_id = user_response.data[0]['id']
+
+            # Remove the user from the channel_members table
+            response = supabase_client.table("channel_members").delete().match({
+                "user_id": user_id,
+                "channel_id": str(channel_id)
+            }).execute()
+
+            if response.data:
+                messages.success(request, "User removed successfully.")
+                return redirect("dashboard-admin")  # Redirect after success
+            else:
+                messages.error(request, "Error removing user.")
+        else:
+            messages.error(request, "User not found.")
+
+    # Render form for GET request
+    return render(request, "api/remove-user.html", {"channel_id": channel_id})

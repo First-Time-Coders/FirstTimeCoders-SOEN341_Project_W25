@@ -20,7 +20,6 @@ from django.urls import path, include
 from api.views import login_view, home_view
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('', home_view, name='home'),
     path('api/', include('api.urls')),
 ]

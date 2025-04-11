@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Your Direct Messages</title>
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <style>
         /* Status indicator styles */
         .status-indicator {
@@ -24,6 +25,21 @@
             margin-left: 8px;
             font-style: italic;
         }
+
+        .dm{
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 180px;
+            transition: background 0.3s ease;
+            background-color: #F5F5F5;
+        }
+
+        .dm:hover .last-seen{
+            opacity: 1;
+            visibility: visible;
+        }
+
     </style>
 </head>
 <body>
@@ -38,31 +54,42 @@
     <div class="page-container">
         <nav id="sidebar">
             <ul>
-                <li>
-                    <span class="name-app" style="font-weight: 600; font-size: 20px">Dashboard</span>
-                    <button id="toggle-btn">
-                        <img src="{% static 'icons/arrowleft-icon.svg' %}" alt="SVG Icon">
-                    </button>
-                </li>
-                <li><a href="{% url 'dashboard-admin' %}"><img src="{% static 'icons/home-icon.svg' %}" alt="Home"><span>Home</span></a></li>
-                <li class="active"><a href="{% url 'dm_list' %}"><img src="{% static 'icons/dm-icon.svg' %}" alt="DMs"><span>Dms</span></a></li>
-
-                <li>
-                    <a href="{% url 'notifications' %}" class="{% if pending_requests|length > 0 or admin_requests|length > 0%}has-pending{% endif %}">
-                        <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon" class="notification-icon">
-                        <span>Notification</span>
-                    </a>
-                </li>
-
-                <li>
-                    <a href="">
-                        <img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon">
-                        <span>Profile</span>
-                    </a>
-                </li>
-
-                <li><form><button id="logout-button" formaction="{% url 'logout' %}">Logout</button></form></li>
-            </ul>
+            <li>
+                <span class="name-app" style="font-weight: 600; font-size: 20px">Dashboard</span>
+                <button id="toggle-btn">
+                    <img src="{% static 'icons/arrowleft-icon.svg' %}" alt="SVG Icon">
+                </button>
+            </li>
+            <li>
+                <a href="{% url 'dashboard-admin' %}">
+                    <img src="{% static 'icons/home-icon.svg' %}" alt="Home">
+                    <span>Home</span>
+                </a>
+            </li>
+            <li class="active">
+                <a href="{% url 'dm_list' %}">
+                    <img src="{% static 'icons/dm-icon.svg' %}" alt="DMs">
+                    <span>Dms</span>
+                </a>
+            </li>
+            <li>
+                <a href="{% url 'notifications' %}" class="{% if pending_requests|length > 0 %}has-pending{% endif %}">
+                    <img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon" class="notification-icon">
+                    <span>Notification</span>
+                </a>
+            </li>
+            <li>
+                <a href="">
+                    <img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon">
+                    <span>Profile</span>
+                </a>
+            </li>
+            <li>
+                <form>
+                    <button id="logout-button" formaction="{% url 'logout' %}">Logout</button>
+                </form>
+            </li>
+        </ul>
         </nav>
         <main id="channelbar">
             <div class="container-channels">
@@ -70,9 +97,10 @@
                 <div class="channels">
                     {% for dm in dm_list %}
                         <a href="{% url 'dm' dm.conversation_id %}" class="channel-link">
-                            <div class="channel">
-                                <span class="status-indicator status-online"></span>
+                            <div class="dm">
+                                <span class="user-status" id="status-{{ dm.other_user_id }}"></span>
                                 {{ dm.other_user }}
+                                <span class="last-seen" id="last-seen-{{ dm.other_user_id }}" style="font-size: 0.5em; color: #888;"></span>
                             </div>
                         </a>
                     {% empty %}
@@ -97,5 +125,131 @@
             });
         });
     </script>
+
+<script>
+const supabaseUrl = 'https://rsdvkupcprtchpzuxgtd.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzZHZrdXBjcHJ0Y2hwenV4Z3RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwODEyNDIsImV4cCI6MjA1MzY1NzI0Mn0.9SQn2rXp4j6p8Em_FVhEHukZdzpYqV4lF5T8PT_gVAc'; // Replace with your actual key
+const supabase_client = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function updateUserStatus(status) {
+  const now = new Date().toISOString();
+  const { error } = await supabase_client
+    .from('user_activity')
+    .upsert({
+      user_id: '{{ user_uuid }}',
+      status: status,
+      last_seen: now,
+      updated_at: now
+    });
+
+  if (error) {
+    console.error("Error updating status:", error);
+  }
+}
+
+// Initial status setup
+updateUserStatus("online");
+
+// Heartbeat setup to ensure status stays fresh
+let lastPing = Date.now();
+const heartbeatInterval = setInterval(async () => {
+  lastPing = Date.now();
+  await updateUserStatus("online");
+}, 10000); // Ping every 10 seconds
+
+// Mark user as offline if no ping for 30 seconds (failsafe)
+const offlineCheckInterval = setInterval(async () => {
+  if (Date.now() - lastPing > 30000) {
+    await updateUserStatus("offline");
+    clearInterval(heartbeatInterval);
+  }
+}, 5000);
+
+// Idle detection setup
+let idleTimer;
+function resetActivity() {
+  clearTimeout(idleTimer);
+  updateUserStatus("online");
+  idleTimer = setTimeout(() => updateUserStatus("away"), 5000);
+}
+
+// Event listeners for activity detection
+const activityEvents = [
+  "mousemove",
+  "keydown",
+  "scroll",
+  "focus",
+  "resize",
+  "click",
+  "wheel",
+  "touchstart",
+  "focusin"
+];
+activityEvents.forEach(event => window.addEventListener(event, resetActivity));
+
+// Handle visibility and tab closing
+document.addEventListener("visibilitychange", () => {
+  updateUserStatus(document.visibilityState === "hidden" ? "away" : "online");
+});
+window.addEventListener("beforeunload", async () => {
+  clearInterval(heartbeatInterval);
+  clearInterval(offlineCheckInterval);
+  await updateUserStatus("offline");
+});
+
+resetActivity();
+
+// Poll every 5 seconds to update user status from Supabase
+async function fetchUserStatuses() {
+  const { data, error } = await supabase_client.from("user_activity").select("*");
+
+  if (error) console.error("Failed to fetch user statuses:", error);
+
+  data.forEach((user) => {
+    const userStatusEl = document.getElementById(`status-${user.user_id}`);
+    const lastSeenEl = document.getElementById(`last-seen-${user.user_id}`);
+
+    if (userStatusEl && lastSeenEl) {
+      userStatusEl.className = 'user-status';
+      lastSeenEl.textContent = '';
+
+      if (user.status === "online") {
+        userStatusEl.style.backgroundColor = "#4CAF50"; // Green
+      } else if (user.status === "away") {
+        userStatusEl.style.backgroundColor = "#FFA500"; // Orange
+      } else {
+        userStatusEl.style.backgroundColor = "#808080"; // Gray
+
+        if (user.last_seen) {
+          const lastSeenDate = new Date(user.last_seen);
+          const now = new Date();
+          const diffInSeconds = Math.floor((now - lastSeenDate) / 1000);
+
+          let formatted = '';
+          if (diffInSeconds < 60) {
+            formatted = `${diffInSeconds}s ago`;
+          } else if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            formatted = `${minutes}m ago`;
+          } else if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            formatted = `${hours}h ago`;
+          } else {
+            const days = Math.floor(diffInSeconds / 86400);
+            formatted = `${days}d ago`;
+          }
+
+          lastSeenEl.textContent = `Active ${formatted}`;
+        }
+      }
+    }
+  });
+}
+
+// Fetch statuses every 5 seconds
+setInterval(fetchUserStatuses, 5000);
+fetchUserStatuses();
+</script>
+
 </body>
 </html>
