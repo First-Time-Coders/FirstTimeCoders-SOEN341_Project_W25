@@ -53,10 +53,6 @@ class ProfileViewTestCase(TestCase):
 
 
 
-
-
-
-
 class EditProfileTest(TestCase):
     def setUp(self):
         self.client = Client()
