@@ -1,25 +1,17 @@
 import datetime
-from http.client import responses
 
 #test pipeline3
 
 from datetime import datetime
 import bcrypt
-import uuid
 import supabase
 from django.shortcuts import render, redirect
-from django.contrib.auth import login, authenticate, logout, get_user_model
 from gotrue.errors import AuthApiError
 from postgrest import APIError
 
 from .decorators import supabase_login_required
-from .forms import registerform
-from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.contrib import messages
-from supabase import create_client, Client
-from django.contrib.auth.hashers import make_password
-import os
 
 
 # Load Supabase credentials
@@ -188,7 +180,11 @@ def dashboard_admin_view(request):
 
         all_channel_ids = list(set(user_channel_ids + admin_channel_ids + general_channel_ids))
 
-        users_query = supabase_client.table("users").select("id, username").neq("id", user_uuid).execute()
+        users_query = supabase_client \
+            .table("users") \
+            .select("id, username") \
+            .neq("id", user_uuid) \
+            .execute()
         users = users_query.data if users_query.data else []
 
         if not all_channel_ids:
@@ -205,7 +201,11 @@ def dashboard_admin_view(request):
         channels = channels_query.data if channels_query.data else []
 
         # Fetch all channels
-        all_channels = supabase_client.table("channels").select("id, name, created_by").execute().data
+        all_channels = supabase_client \
+            .table("channels") \
+            .select("id, name, created_by") \
+            .execute().data
+
         joinable_channels = [ch for ch in all_channels if ch["id"] not in user_channel_ids and ch["created_by"] != user_uuid]
 
         pending_requests = supabase_client.table("channels_requests") \
@@ -297,7 +297,12 @@ def create_channel(request):
 def delete_channel(request, channel_id):
     if request.method == 'POST':
         try:
-            channel = supabase_client.table("channels").select("name").eq("id", channel_id).single().execute()
+            channel = supabase_client \
+                .table("channels") \
+                .select("name") \
+                .eq("id", channel_id) \
+                .single().execute()
+
             if channel.data and channel.data['name'].startswith("GENERAL-"):
                 messages.error(request, "General channels cannot be deleted.")
                 return redirect('dashboard-admin')
@@ -339,8 +344,19 @@ def view_channel(request, channel_id):
 @supabase_login_required
 def messages_view(request, channel_id):
     user_uuid = request.session['user_uuid']
-    member_check = supabase_client.table("channel_members").select("id").eq("user_id", user_uuid).eq("channel_id", channel_id).execute()
-    created_by_check = supabase_client.table("channels").select("created_by").eq("id", channel_id).single().execute()
+    member_check = supabase_client \
+        .table("channel_members") \
+        .select("id") \
+        .eq("user_id", user_uuid) \
+        .eq("channel_id", channel_id) \
+        .execute()
+
+    created_by_check = supabase_client \
+        .table("channels") \
+        .select("created_by") \
+        .eq("id", channel_id) \
+        .single().execute()
+
     if not member_check.data and not created_by_check.data:
         return HttpResponse("Access Denied: You are not a member of this channel", status=403)
 
@@ -364,9 +380,16 @@ def messages_view(request, channel_id):
         return redirect('messages', channel_id=channel_id)
 
 #used to fetch messages from a channel
-    message = supabase_client.table('channel_messages').select('message, username, id').eq('channel_id', channel_id).execute()
+    message = supabase_client \
+        .table('channel_messages') \
+        .select('message, username, id') \
+        .eq('channel_id', channel_id) \
+        .execute()
 
-    channel = supabase_client.table('channels').select('name').eq('id', channel_id).single().execute()
+    channel = supabase_client.table('channels') \
+        .select('name')\
+        .eq('id', channel_id)\
+        .single().execute()
     channel_name = channel.data['name'] if channel.data else "Unknown Channel"
 
     context = {
