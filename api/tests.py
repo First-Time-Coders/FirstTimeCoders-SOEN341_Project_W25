@@ -22,6 +22,49 @@ class LogoutTestCase(TestCase):
         self.assertRedirects(response, reverse('login'))
 
 
+from unittest.mock import patch
+from django.test import TestCase, Client
+from django.urls import reverse
+
+from unittest.mock import patch
+from django.test import TestCase, Client
+from django.urls import reverse
+
+class ProfileViewTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        session = self.client.session
+        session['user_uuid'] = 'uuid123'
+        session.save()
+
+    @patch('api.views.supabase_client')
+    def test_profile_view_success(self, mock_supabase):
+        mock_supabase.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value.data = {
+            'first name': 'Safouane',
+            'last name': 'Maghni',
+            'email': 'safouane@example.com',
+            'username': 'Saf',
+            'gender': 'Male',
+            'role': 'Admin',
+            'age': 22
+        }
+
+        response = self.client.get(reverse('profile'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Safouane')
+        self.assertContains(response, 'Maghni')
+        self.assertContains(response, 'safouane@example.com')
+        self.assertContains(response, 'Saf')
+        self.assertContains(response, 'Male')
+        self.assertContains(response, 'Admin')
+        self.assertContains(response, '22')
+
+
+
+
+
+
 class EditProfileTest(TestCase):
     def setUp(self):
         self.client = Client()
@@ -31,18 +74,18 @@ class EditProfileTest(TestCase):
 
     @patch('api.views.supabase_client')
     def test_edit_all_fields_success(self, mock_supabase):
-        # Simulate Supabase update returning success for each field
+        # Mock Supabase update and auth update responses
         mock_supabase.table.return_value.update.return_value.eq.return_value.execute.return_value.data = [{'id': 'uuid123'}]
         mock_supabase.auth.update_user.return_value = {}
 
         fields_to_test = {
-            "first_name": "John",
-            "last_name": "Doe",
-            "email": "john.doe@example.com",
-            "age": "25",
+            "first_name": "Safouane",
+            "last_name": "Maghni",
+            "email": "safouane@example.com",
+            "age": "22",
             "gender": "Male",
             "role": "Admin",
-            "username": "john_doe"
+            "username": "Saf"
         }
 
         for field, value in fields_to_test.items():
@@ -50,6 +93,5 @@ class EditProfileTest(TestCase):
                 'field': field,
                 'value': value
             })
-
             self.assertEqual(response.status_code, 302)
             self.assertRedirects(response, reverse('profile'))
