@@ -58,11 +58,6 @@
             <span>ChatHaven</span>
         </div>
     </div>
-    <div class="logout">
-        <form>
-            <button formaction="{% url 'logout' %}">Logout</button>
-        </form>
-    </div>
 </header>
 <div class="page-container">
     <nav id="sidebar">
@@ -74,15 +69,16 @@
                 </button>
             </li>
             <li>
-                {% if user.role == 'admin' %}
                 <a href="{% url 'dashboard-admin' %}"><img src="{% static 'icons/home-icon.svg' %}" alt="SVG Icon"><span>Home</span></a>
-                {% else %}
-                <a href="{% url 'dashboard' %}"><img src="{% static 'icons/home-icon.svg' %}" alt="SVG Icon"><span>Home</span></a>
-                {% endif %}
             </li>
             <li><a href=""><img src="{% static 'icons/notification-icon.svg' %}" alt="SVG Icon"><span>Notification</span></a></li>
             <li><a href=""><img src="{% static 'icons/dm-icon.svg' %}" alt="SVG Icon"><span>Dms</span></a></li>
             <li class="active"><a href="{% url 'profile' %}"><img src="{% static 'icons/profile-icon.svg' %}" alt="SVG Icon"><span>Profile</span></a></li>
+            <div class="logout">
+                <form>
+                    <button id="logout-button" formaction="{% url 'logout' %}">Logout</button>
+                </form>
+            </div>
         </ul>
     </nav>
     <section class="profile-section">

@@ -31,6 +31,7 @@ SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
+print("DEBUG: OPENAI_API_KEY:", api_key)
 # Initialize Supabase client
 supabase_client = supabase.create_client(SUPABASE_URL, SUPABASE_KEY)
 
