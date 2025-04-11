@@ -7,7 +7,7 @@
     <title>DM with {{ other_user }}</title>
     <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
     <link rel="stylesheet" href="{% static 'css/message.css' %}">
-    =
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
     <style>
         /* Existing styles */
         .status-indicator {
@@ -32,7 +32,21 @@
             margin-right: auto;
             max-width: 70%;
         }
-        
+
+        .dm{
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 180px;
+            transition: background 0.3s ease;
+            background-color: #F5F5F5;
+        }
+
+        .dm:hover .last-seen{
+            opacity: 1;
+            visibility: visible;
+        }
+
         /* Reply functionality styles */
         .message-actions {
             display: flex;
@@ -244,9 +258,10 @@
             <div class="channels">
                 {% for dm in dm_list %}
                     <a href="{% url 'dm' dm.conversation_id %}" class="channel-link">
-                        <div class="channel">
-                            <span class="status-indicator status-online"></span>
+                        <div class="dm">
+                            <span class="user-status" id="status-{{ dm.other_user_id }}"></span>
                             {{ dm.other_user }}
+                            <span class="last-seen" id="last-seen-{{ dm.other_user_id }}" style="font-size: 0.5em; color: #888;"></span>
                         </div>
                     </a>
                 {% empty %}
@@ -261,7 +276,7 @@
     <div class="chat-container">
         <div class="channel-header">
             <h1 id="channel-name">
-                <span class="status-indicator status-online"></span>
+                <span class="user-status" id="status-{{ dm.other_user_id }}"></span>
                 {{ other_user }}
             </h1>
         </div>
@@ -424,6 +439,251 @@
         input.value += emoji;
         input.focus();
     }
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+        const toggleButton = document.getElementById('toggle-btn');
+        const sidebar = document.getElementById('sidebar');
+
+        toggleButton.addEventListener("click", function() {
+        sidebar.classList.toggle('close');
+        toggleButton.classList.toggle('rotate');
+
+         });
+    });
+</script>
+
+<script>
+const supabaseUrl = 'https://rsdvkupcprtchpzuxgtd.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzZHZrdXBjcHJ0Y2hwenV4Z3RkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzgwODEyNDIsImV4cCI6MjA1MzY1NzI0Mn0.9SQn2rXp4j6p8Em_FVhEHukZdzpYqV4lF5T8PT_gVAc'; // Replace with your actual key
+const supabase_client = supabase.createClient(supabaseUrl, supabaseKey);
+
+async function updateUserStatus(status) {
+  const now = new Date().toISOString();
+  const { error } = await supabase_client
+    .from('user_activity')
+    .upsert({
+      user_id: '{{ user_uuid }}',
+      status: status,
+      last_seen: now,
+      updated_at: now
+    });
+
+  if (error) {
+    console.error("Error updating status:", error);
+  }
+}
+
+// Initial status setup
+updateUserStatus("online");
+
+// Heartbeat setup to ensure status stays fresh
+let lastPing = Date.now();
+const heartbeatInterval = setInterval(async () => {
+  lastPing = Date.now();
+  await updateUserStatus("online");
+}, 10000); // Ping every 10 seconds
+
+// Mark user as offline if no ping for 30 seconds (failsafe)
+const offlineCheckInterval = setInterval(async () => {
+  if (Date.now() - lastPing > 30000) {
+    await updateUserStatus("offline");
+    clearInterval(heartbeatInterval);
+  }
+}, 5000);
+
+// Idle detection setup
+let idleTimer;
+function resetActivity() {
+  clearTimeout(idleTimer);
+  updateUserStatus("online");
+  idleTimer = setTimeout(() => updateUserStatus("away"), 5000);
+}
+
+// Event listeners for activity detection
+const activityEvents = [
+  "mousemove",
+  "keydown",
+  "scroll",
+  "focus",
+  "resize",
+  "click",
+  "wheel",
+  "touchstart",
+  "focusin"
+];
+activityEvents.forEach(event => window.addEventListener(event, resetActivity));
+
+// Handle visibility and tab closing
+document.addEventListener("visibilitychange", () => {
+  updateUserStatus(document.visibilityState === "hidden" ? "away" : "online");
+});
+window.addEventListener("beforeunload", async () => {
+  clearInterval(heartbeatInterval);
+  clearInterval(offlineCheckInterval);
+  await updateUserStatus("offline");
+});
+
+resetActivity();
+
+// Poll every 5 seconds to update user status from Supabase
+async function fetchUserStatuses() {
+  const { data, error } = await supabase_client.from("user_activity").select("*");
+
+  if (error) console.error("Failed to fetch user statuses:", error);
+
+  data.forEach((user) => {
+    const userStatusEl = document.getElementById(`status-${user.user_id}`);
+    const lastSeenEl = document.getElementById(`last-seen-${user.user_id}`);
+
+    if (userStatusEl && lastSeenEl) {
+      userStatusEl.className = 'user-status';
+      lastSeenEl.textContent = '';
+
+      if (user.status === "online") {
+        userStatusEl.style.backgroundColor = "#4CAF50"; // Green
+      } else if (user.status === "away") {
+        userStatusEl.style.backgroundColor = "#FFA500"; // Orange
+      } else {
+        userStatusEl.style.backgroundColor = "#808080"; // Gray
+
+        if (user.last_seen) {
+          const lastSeenDate = new Date(user.last_seen);
+          const now = new Date();
+          const diffInSeconds = Math.floor((now - lastSeenDate) / 1000);
+
+          let formatted = '';
+          if (diffInSeconds < 60) {
+            formatted = `${diffInSeconds}s ago`;
+          } else if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            formatted = `${minutes}m ago`;
+          } else if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            formatted = `${hours}h ago`;
+          } else {
+            const days = Math.floor(diffInSeconds / 86400);
+            formatted = `${days}d ago`;
+          }
+
+          lastSeenEl.textContent = `Active ${formatted}`;
+        }
+      }
+    }
+  });
+}
+
+// Fetch statuses every 5 seconds
+setInterval(fetchUserStatuses, 5000);
+fetchUserStatuses();
+</script>
+
+<script>
+  const currentUser = "{{ user_uuid }}";
+  const userRole = "{{ user_role }}";
+  const csrfToken = "{{ csrf_token }}";
+  const conversationId = "{{ conversation_id }}";
+
+  let lastMessageTimestamp = null;
+
+  async function loadInitialMessages() {
+    const { data, error } = await supabase_client
+      .from('Messages Table')
+      .select('*')
+      .eq('conversation_id', '{{ conversation_id }}')
+      .order('created_at', { ascending: true })
+      .then();
+
+    if (error) {
+      console.error("Error loading initial DM messages:", error);
+      return;
+    }
+
+    const container = document.getElementById("message-container");
+    data.forEach(message => {
+      appendMessage(message);
+    });
+
+    if (data.length > 0) {
+      lastMessageTimestamp = data[data.length - 1].created_at;
+    } else {
+      lastMessageTimestamp = new Date().toISOString();
+    }
+  }
+
+  async function pollNewMessages() {
+    if (!lastMessageTimestamp) return;
+
+    const { data, error } = await supabase_client
+      .from('Messages Table')
+      .select('*')
+      .eq('conversation_id', '{{ conversation_id }}')
+      .gt('created_at', lastMessageTimestamp)
+      .order('created_at', { ascending: true })
+      .then();
+
+    if (error) {
+      console.error("Error polling new messages:", error);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      data.forEach(message => {
+        appendMessage(message);
+      });
+      lastMessageTimestamp = data[data.length - 1].created_at;
+    }
+  }
+
+  function appendMessage(message) {
+    const container = document.getElementById("message-container");
+    const div = document.createElement("div");
+
+    const senderId = message.sender_id || message.user_id;
+    div.className = "message " + (senderId === currentUser ? "sent-message" : "received-message");
+
+    let quotedHTML = "";
+    if (message.quoted_message_id && message.quoted_author && message.quoted_content) {
+      quotedHTML = `
+        <div class="message-quote">
+          <div class="quoted-author">${message.quoted_author}</div>
+          <div class="quoted-content">${message.quoted_content}</div>
+        </div>
+      `;
+    }
+
+    let deleteFormHTML = "";
+      if (senderId === currentUser || userRole === "admin") {
+        deleteFormHTML = `
+          <form method="POST" action="/api/delete-message/${message.id}/" class="delete-form">
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+            <input type="hidden" name="message_type" value="dm">
+            <input type="hidden" name="conversation_id" value="${conversationId}">
+            <button type="submit">Delete</button>
+          </form>
+        `;
+      }
+
+    div.innerHTML = `
+      ${quotedHTML}
+      <p>
+        <strong>${message.username}:</strong>
+        ${message.content}
+      </p>
+      <div class="message-actions">
+        <span class="timestamp" data-iso="${message.created_at}">${new Date(message.created_at).toISOString().substring(0,10)}</span>
+        ${deleteFormHTML}
+        <button class="reply-button" onclick="replyToMessage('${message.id}', '${message.username}', '${message.content}')">Reply</button>
+      </div>
+    `;
+
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  // Trigger initial load and set up polling every 5 seconds
+  loadInitialMessages();
+  setInterval(pollNewMessages, 5000);
 </script>
 </body>
 </html>

@@ -535,7 +535,8 @@ def dm_list_view(request):
             user_query = supabase_client.table("users").select("username").eq("id", other_user_id).single().execute()
             dm_list.append({
                 "conversation_id": conv['id'],
-                "other_user": user_query.data['username'] if user_query.data else "Unknown"
+                "other_user": user_query.data['username'] if user_query.data else "Unknown",
+                "other_user_id": other_user_id
             })
     except APIError as e:
         messages.error(request, "Failed to load DMs")
@@ -579,7 +580,8 @@ def dm_view(request, conversation_id):
             user_query = supabase_client.table("users").select("username").eq("id", other_user_id).single().execute()
             dm_list.append({
                 "conversation_id": conv['id'],
-                "other_user": user_query.data['username'] if user_query.data else "Unknown"
+                "other_user": user_query.data['username'] if user_query.data else "Unknown",
+                "other_user_id": other_user_id
             })
     except APIError as e:
         messages.error(request, "Failed to load DMs")
@@ -631,6 +633,7 @@ def dm_view(request, conversation_id):
                 message_data = {
                     "conversation_id": conversation_id,
                     "sender_id": user_uuid,
+                    "username": request.session.get('username'),
                     "content": content,
                     "created_at": datetime.now().isoformat(),
                     "is_read": False
