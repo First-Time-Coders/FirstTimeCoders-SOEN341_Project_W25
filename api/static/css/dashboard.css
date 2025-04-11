@@ -421,13 +421,15 @@ justify-content: center;
     display: flex;
     flex-direction: column;
     gap: 10px;
+    overflow-y: auto;
+    height: 70%;
 }
 
 .channel {
     padding: 8px;
     border-radius: 5px;
     cursor: pointer;
-    width: 200px;
+    width: 180px;
     transition: background 0.3s ease;
     background-color: #F5F5F5;
 }
@@ -472,6 +474,7 @@ a:visited {
     padding-top: 50px;
     background-color: #F5F5F5;
     border-radius: 5px;
+    height: 80%;
 
 }
 
@@ -491,6 +494,14 @@ a:visited {
     align-items: center;
 }
 
+.joinable-channels{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    height: 80%;
+}
+
 .user-info-container {
     display: flex;
     flex-direction: column;
@@ -498,6 +509,7 @@ a:visited {
     padding: .79em;
     background-color: #F8F8F8;
     width: 250px;
+
 }
 
 /* Sticky "Users" header */
@@ -510,13 +522,13 @@ a:visited {
     border-bottom: none;
 }
 
-/* User list with 60% height and scroll */
+/* User list with 70% height and scroll */
 .users-list {
     display: flex;
     flex-direction: column;
     padding-right: 17px;
     border-radius: 5px;
-    height: 70%;
+    height: 80%;
     overflow-y: auto;
     scrollbar-width: auto; /* For Firefox */
     -ms-overflow-style: auto; /* For IE/Edge */
@@ -524,30 +536,17 @@ a:visited {
 
 /* Optional: Clean up user items */
 .user-item {
-    width: 100%;
+    width: 90%;
     background-color: #F5F5F5;
     border-radius: 5px;
     margin-bottom: 5px;
-}
-
-/* Style the button within user items */
-.user-item button {
-    border-radius: 5px;
     padding: 10px;
-    width: 87%;
-    background-color: #F5F5F5;
-    color: #0F3923;
-    border: none;
-    justify-content: left;
-    transition: 300ms ease-in-out;
-    cursor: pointer;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    height: 20px;
 }
-
-/* Optional hover effect for a subtle pop */
-.user-item button:hover {
-    background-color: #E0E0E0;
-}
-
 
 .user-name {
     font-size: 14px;
@@ -563,6 +562,18 @@ a:visited {
   margin-right: 5px;
 }
 
+.last-seen{
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+
+}
+
+.user-item:hover .last-seen{
+    opacity: 1;
+    visibility: visible;
+}
+
 .user-status.offline {
     background-color: gray;
 }
@@ -576,3 +587,5 @@ a:visited {
 .user-status.away {
     background-color: #FFA500;
 }
+
+
