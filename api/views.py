@@ -353,21 +353,26 @@ def view_channel(request, channel_id):
 @supabase_login_required
 def messages_view(request, channel_id):
     user_uuid = request.session['user_uuid']
-    member_check = supabase_client \
-        .table("channel_members") \
-        .select("id") \
-        .eq("user_id", user_uuid) \
-        .eq("channel_id", channel_id) \
-        .execute()
 
-    created_by_check = supabase_client \
-        .table("channels") \
-        .select("created_by") \
-        .eq("id", channel_id) \
-        .single().execute()
+    if not user_uuid:
+        return HttpResponse("Unauthorized: Please log in.", status=401)
 
-    if not member_check.data and not created_by_check.data:
-        return HttpResponse("Access Denied: You are not a member of this channel", status=403)
+    try:
+        member_check = supabase_client \
+            .table("channel_members") \
+            .select("id") \
+            .eq("user_id", user_uuid) \
+            .eq("channel_id", channel_id) \
+            .execute()
+
+        created_by_check = supabase_client \
+            .table("channels") \
+            .select("created_by") \
+            .eq("id", channel_id) \
+            .single().execute()
+
+        if not member_check.data and not created_by_check.data:
+            return HttpResponse("Access Denied: You are not a member of this channel", status=403)
 
         user_channels_query = supabase_client.table("channel_members").select("channel_id").eq("user_id",user_uuid).execute()
         user_channel_ids = [entry["channel_id"] for entry in user_channels_query.data] if user_channels_query.data else []
@@ -457,7 +462,7 @@ def messages_view(request, channel_id):
 
     except Exception as e:
         print(f"DEBUG: Exception in messages_view: {str(e)}")
-        return HttpResponse(f"Error: {str(e)}. <a href='/api/dashboard-admin/'>Back to Dashboard</a>")
+        return HttpResponse(f"Error: {str(e)}. <a href='/api/dashboard/'>Back to Dashboard</a>")
 
 
 @supabase_login_required
