@@ -193,12 +193,22 @@ a {
     width: 100vw;
 }
 
-.chat-container {
+.ai-chat-container {
     width: calc(100vw - 250px);
     display: flex;
     flex-direction: column;
     height: 90dvh;
-    /*width: 68%;*/
+    padding: .79em;
+    background-color: #FAFAFA;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+}
+
+.chat-container {
+    display: flex;
+    flex-direction: column;
+    height: 90dvh;
+    width: 60%;
     padding: .79em;
     background-color: #FAFAFA;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -393,9 +403,11 @@ a {
 }
 
 .timestamp {
-    font-size: 0.8em;
-    color: #888;
-    margin-left: 8px;
+    background: none;
+    border: none;
+    color: #0F3923;
+    font-size: 12px;
+    padding: 2px 5px;
 }
 
 a {

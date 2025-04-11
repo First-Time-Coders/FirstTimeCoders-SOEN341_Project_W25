@@ -372,7 +372,7 @@ def messages_view(request, channel_id):
         channel_query = supabase_client.table('channels').select('name').eq('id', channel_id).single().execute()
         channel_name = channel_query.data['name'] if channel_query.data else "Unknown Channel"
 
-        message_query = supabase_client.table('channel_messages').select('*').eq('channel_id', channel_id).execute()
+        message_query = supabase_client.table('channel_messages').select('*').eq('channel_id', channel_id).order('created_at', desc=False).execute()
         messages = message_query.data if message_query.data else []
 
         users = supabase_client.table("channel_members").select("user_id").eq("channel_id", channel_id).execute()
@@ -382,8 +382,6 @@ def messages_view(request, channel_id):
         user_ids.append(creator_id)
         members = supabase_client.table("users").select("id, username").in_("id", user_ids).execute()
         channel_members = [{"user_id": member["id"], "username": member["username"]} for member in members.data]
-
-        print("DEBUG: Channel Members:", channel_members)
 
         chat_messages = []
         for message in messages:
@@ -396,6 +394,7 @@ def messages_view(request, channel_id):
 
         if request.method == 'POST':
             content = request.POST.get('message')
+            username = request.session.get('username')
             quoted_message_id = request.POST.get('quoted_message_id')
             quoted_author = request.POST.get('quoted_author')
             quoted_content = request.POST.get('quoted_content')
@@ -406,7 +405,6 @@ def messages_view(request, channel_id):
                     "user_id": user_uuid,
                     "message": content,
                     "created_at": datetime.now().isoformat(),
-                    "username": request.session.get('username'),
                 }
 
                 if quoted_message_id:
@@ -420,6 +418,7 @@ def messages_view(request, channel_id):
                     "channel_id": str(channel_id),
                     "user_id": user_uuid,
                     "message": content,
+                    "username": username,
                     "created_at": datetime.now().isoformat(),
                     "quoted_message_id": quoted_message_id,
                     "quoted_author": quoted_author,
@@ -656,7 +655,8 @@ def dm_view(request, conversation_id):
             "other_user": other_user,
             "dm_list": dm_list,
             "pending_requests": pending_requests,
-            "admin_requests": admin_requests
+            "admin_requests": admin_requests,
+            "user_uuid": user_uuid,
         })
 
     except Exception as e:

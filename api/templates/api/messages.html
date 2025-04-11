@@ -116,16 +116,18 @@
                         <p>
                             <strong>{{ message.username }}:</strong>
                             {{ message.message }}
-                            <span class="timestamp">{{ message.created_at|date:"M d, g:i A" }}</span>
                         </p>
                         <div class="message-actions">
+                            <span class="timestamp" data-iso="{{ message.created_at|date:'c' }}">
+                                {{ message.created_at|date:'Y-m-d' }}
+                            </span>
                             {% if user_role == "admin" or message.user_id == user_uuid %}
-                            <form method="POST" action="{% url 'delete-message' message.id %}" >
-                                {% csrf_token %}
-                                <input type="hidden" name="message_type" value="channel">
-                                <input type="hidden" name="channel_id" value="{{ channel_id }}">
-                                <button type="submit">Delete</button>
-                            </form>
+                                <form method="POST" action="{% url 'delete-message' message.id %}" >
+                                    {% csrf_token %}
+                                    <input type="hidden" name="message_type" value="channel">
+                                    <input type="hidden" name="channel_id" value="{{ channel_id }}">
+                                    <button type="submit">Delete</button>
+                                </form>
                             {% endif %}
                             <button class="reply-button" onclick="replyToMessage('{{ message.id }}', '{{ message.username }}', '{{ message.message }}')">
                                 Reply
@@ -395,6 +397,122 @@ async function fetchUserStatuses() {
 setInterval(fetchUserStatuses, 5000);
 fetchUserStatuses();
 </script>
+
+<script>
+  const currentUser = "{{ user_id }}";
+  const userRole = "{{ user_role }}";
+  const csrfToken = "{{ csrf_token }}";
+  const channelId = "{{ channel_id }}";
+
+  let lastMessageTimestamp = null;
+
+  async function loadInitialMessages() {
+    const { data, error } = await supabase_client
+      .from('channel_messages')
+      .select('*')
+      .eq('channel_id', '{{ channel_id }}')
+      .order('created_at', { ascending: true })
+      .then();
+
+    if (error) {
+      console.error("Error loading initial messages:", error);
+      return;
+    }
+
+    const container = document.getElementById("message-container");
+    data.forEach(message => {
+      appendMessage(message);
+    });
+
+    if (data.length > 0) {
+      lastMessageTimestamp = data[data.length - 1].created_at;
+    } else {
+      lastMessageTimestamp = new Date().toISOString();
+    }
+  }
+
+  async function pollNewMessages() {
+    if (!lastMessageTimestamp) return;
+
+    const { data, error } = await supabase_client
+      .from('channel_messages')
+      .select('*')
+      .eq('channel_id', '{{ channel_id }}')
+      .gt('created_at', lastMessageTimestamp)
+      .order('created_at', { ascending: true })
+      .then();
+
+    if (error) {
+      console.error("Error polling new messages:", error);
+      return;
+    }
+
+    if (data && data.length > 0) {
+      data.forEach(message => {
+          if(message.users && message.users.username){
+              message.username = message.users.username;
+          } else {
+              message.username = "Unknown User";
+          }
+        appendMessage(message);
+      });
+      lastMessageTimestamp = data[data.length - 1].created_at;
+    }
+  }
+
+  function appendMessage(message) {
+    const container = document.getElementById("message-container");
+    const div = document.createElement("div");
+    const currentUser = "{{ user_id }}";
+    div.className = "message " + (message.user_id === currentUser ? "sent-message" : "received-message");
+
+    let quotedHTML = "";
+    if (message.quoted_message_id && message.quoted_author && message.quoted_content) {
+      quotedHTML = `
+        <div class="message-quote">
+          <div class="quoted-author">${message.quoted_author}</div>
+          <div class="quoted-content">${message.quoted_content}</div>
+        </div>
+      `;
+    }
+
+    let deleteFormHTML = "";
+      if (message.user_id === currentUser || userRole === "admin") {
+        deleteFormHTML = `
+          <form method="POST" action="/api/delete-message/${message.id}/" class="delete-form">
+            <input type="hidden" name="csrfmiddlewaretoken" value="${csrfToken}">
+            <input type="hidden" name="message_type" value="channel">
+            <input type="hidden" name="channel_id" value="${channelId}">
+            <button type="submit">Delete</button>
+          </form>
+        `;
+      }
+
+    div.innerHTML = `
+      ${quotedHTML}
+      <p>
+        <strong>${message.username}:</strong>
+        ${message.message}
+      </p>
+      <div class="message-actions">
+        <span class="timestamp" data-iso="${message.created_at}">${new Date(message.created_at).toISOString().substring(0,10)}</span>
+        ${deleteFormHTML}
+        <button class="reply-button" onclick="replyToMessage('${message.id}', '${message.username}', '${message.message}')">Reply</button>
+      </div>
+    `;
+
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  // Trigger initial load and set up polling every 5 seconds
+  loadInitialMessages();
+  setInterval(pollNewMessages, 5000);
+</script>
+
+
+
+
 
 <script defer>
     document.addEventListener("DOMContentLoaded", function() {
