@@ -20,7 +20,7 @@
     </div>
 
 </header>
-<div class="page-container">
+<div class="page-container" id="chat">
 <nav id="sidebar">
     <ul>
         <li>
@@ -65,25 +65,47 @@
         </div>
     </ul>
 </nav>
+
     <div class="chat-container">
         <div class="channel-header">
-            <h1 id="channel-name">
-                Chat with AI
-            </h1>
-        </div>
-        <div class="message-container" id="message-container">
-            {% for message in messages %}
-                <div class="sent-message"><p><strong>You:</strong> {{message.message}}</p></div>
-                <div class="received-message"><p><strong>AI:</strong> {{message.response}}</p></div>
-            {% empty %}
-                <p>Start the conversation!</p>
-            {% endfor %}
-            <form method="post">
-                {% csrf_token %}
-                <input type="text" name="message" id="message-input" placeholder="Type your message..." autocomplete="off">
-                <button type="submit">Send</button>
-            </form>
-        </div>
+        <h1 id="channel-name">Chat with AI</h1>
     </div>
+
+    <div class="message-container" id="message-container">
+        {% for message in messages %}
+            <div class="message sent-message">
+                <p>
+                    <strong>You:</strong> {{ message.message }}
+                </p>
+            </div>
+            <div class="message received-message">
+                <p>
+                    <strong>AI:</strong> {{ message.response }}
+                </p>
+            </div>
+        {% empty %}
+            <p>It's quiet in here...</p>
+        {% endfor %}
+        </div>
+        <div class="message-input">
+        <form method="POST" id="message-form">
+            {% csrf_token %}
+            <div class="message-input-container">
+                <input type="text" name="message" id="message-input" placeholder="Type your message..." autocomplete="off">
+            </div>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+    </div>
+
+
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const messageContainer = document.getElementById('message-container');
+        messageContainer.scrollTop = messageContainer.scrollHeight;
+    });
+</script>
 </body>
 </html>

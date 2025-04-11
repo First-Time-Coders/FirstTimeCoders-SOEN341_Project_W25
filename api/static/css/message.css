@@ -194,10 +194,11 @@ a {
 }
 
 .chat-container {
+    width: calc(100vw - 250px);
     display: flex;
     flex-direction: column;
     height: 90dvh;
-    width: 68%;
+    /*width: 68%;*/
     padding: .79em;
     background-color: #FAFAFA;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -567,3 +568,4 @@ a {
         .message-input-container input:focus {
             outline: none;
         }
+
