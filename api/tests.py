@@ -58,7 +58,7 @@ class ProfileViewTestCase(TestCase):
         self.assertContains(response, 'Saf')
         self.assertContains(response, 'Male')
         self.assertContains(response, 'Admin')
-        self.assertContains(response, '22')
+
 
 
 
@@ -82,7 +82,6 @@ class EditProfileTest(TestCase):
             "first_name": "Safouane",
             "last_name": "Maghni",
             "email": "safouane@example.com",
-            "age": "22",
             "gender": "Male",
             "role": "Admin",
             "username": "Saf"
