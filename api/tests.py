@@ -11,6 +11,7 @@ import datetime
 
 from api.views import messages_view
 
+import uuid
 
 class LogoutTestCase(TestCase):
     def setUp(self):
@@ -158,3 +159,130 @@ class MessagesViewTestCase(TestCase):
 
         self.assertIn(b'testuser', response.content)
 
+
+class DMConversationTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        # Set up session data as if user is logged in
+        session = self.client.session
+        self.user_uuid = "test-user-id"
+        session['user_uuid'] = self.user_uuid
+        session['username'] = 'testuser'
+        session['role'] = 'member'
+        session.save()
+        
+        # URL for starting a new DM
+        self.start_dm_url = reverse('start_dm')
+
+    @patch('api.views.supabase_client')
+    def test_start_dm_conversation_success(self, mock_supabase):
+        """Test successfully starting a DM conversation with another user"""
+        # Mock the recipient lookup
+        recipient_id = "recipient-user-id"
+        mock_recipient_data = MagicMock(data={'id': recipient_id})
+        mock_supabase.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value = mock_recipient_data
+        
+        # Mock the conversation check (no existing conversation)
+        mock_supabase.table.return_value.select.return_value.or_.return_value.execute.return_value = MagicMock(data=[])
+        
+        # Mock the new conversation creation
+        new_conversation_id = str(uuid.uuid4())
+        mock_new_conv = MagicMock(data=[{'id': new_conversation_id}])
+        mock_supabase.table.return_value.insert.return_value.execute.return_value = mock_new_conv
+        
+        # Make the POST request to start a DM
+        response = self.client.post(self.start_dm_url, {
+            'recipient_username': 'recipient_user'
+        })
+        
+        # Check that we're redirected to the DM conversation
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('dm', kwargs={'conversation_id': new_conversation_id}))
+        
+        # Verify Supabase calls
+        # 1. First verifies the recipient exists
+        mock_supabase.table.assert_any_call("users")
+        # 2. Then checks for existing conversation
+        mock_supabase.table.assert_any_call("Conversations Table")
+        
+        # 3. Then creates a new conversation - use a more flexible assertion
+        insert_call_args = mock_supabase.table.return_value.insert.call_args[0][0]
+        self.assertEqual(insert_call_args['user1_id'], self.user_uuid)
+        self.assertEqual(insert_call_args['user2_id'], recipient_id)
+        self.assertTrue('created_at' in insert_call_args)  # Just check the key exists
+
+    @patch('api.views.supabase_client')
+    def test_start_dm_existing_conversation(self, mock_supabase):
+        """Test starting a DM with a user where a conversation already exists"""
+        # Mock the recipient lookup
+        recipient_id = "recipient-user-id"
+        mock_recipient_data = MagicMock(data={'id': recipient_id})
+        mock_supabase.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value = mock_recipient_data
+        
+        # Mock finding an existing conversation
+        existing_conversation_id = str(uuid.uuid4())
+        
+        # Add the required fields to the mock conversation data
+        mock_supabase.table.return_value.select.return_value.or_.return_value.execute.return_value = MagicMock(
+            data=[{
+                'id': existing_conversation_id,
+                'user1_id': self.user_uuid,
+                'user2_id': recipient_id
+            }]
+        )
+        
+        # Make the POST request to start a DM
+        response = self.client.post(self.start_dm_url, {
+            'recipient_username': 'recipient_user'
+        })
+        
+        # Check that we're redirected to the existing DM conversation
+        self.assertEqual(response.status_code, 302)
+        
+        # Instead of full assertRedirects, just check the URL pattern
+        self.assertTrue(f'/api/dm/{existing_conversation_id}/' in response.url)
+        
+        # Verify the insert method was NOT called (since we found an existing conversation)
+        mock_supabase.table.return_value.insert.assert_not_called()
+
+    @patch('api.views.supabase_client')
+    def test_start_dm_user_not_found(self, mock_supabase):
+        """Test starting a DM with a non-existent user"""
+        # Mock the recipient lookup to return no user
+        mock_supabase.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value = MagicMock(data=None)
+        
+        # Make the POST request to start a DM
+        response = self.client.post(self.start_dm_url, {
+            'recipient_username': 'nonexistent_user'
+        })
+        
+        # Check that we're redirected back to the start DM page
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('start_dm'))
+        
+        # Check that an error message would be displayed
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), 'User not found')
+
+    @patch('api.views.supabase_client')
+    def test_start_dm_with_self(self, mock_supabase):
+        """Test starting a DM with yourself (should not be allowed)"""
+        # Mock the recipient lookup to return the current user
+        mock_supabase.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value = MagicMock(
+            data={'id': self.user_uuid}
+        )
+        
+        # Make the POST request to start a DM with yourself
+        response = self.client.post(self.start_dm_url, {
+            'recipient_username': 'testuser'  # Same as current user
+        })
+        
+        # Check that we're redirected back to the start DM page
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('start_dm'))
+        
+        # Check that an error message would be displayed
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), 'You cannot DM yourself')
