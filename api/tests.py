@@ -22,14 +22,6 @@ class LogoutTestCase(TestCase):
         self.assertRedirects(response, reverse('login'))
 
 
-from unittest.mock import patch
-from django.test import TestCase, Client
-from django.urls import reverse
-
-from unittest.mock import patch
-from django.test import TestCase, Client
-from django.urls import reverse
-
 class ProfileViewTestCase(TestCase):
     def setUp(self):
         self.client = Client()
