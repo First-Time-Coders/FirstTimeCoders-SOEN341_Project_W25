@@ -1,10 +1,12 @@
 from unittest.mock import patch, ANY, MagicMock
 
 from django.contrib.auth.models import User
-from django.test import Client, TestCase
+from django.test import Client, TestCase, RequestFactory
 from django.urls import reverse
 from gotrue.errors import AuthApiError
 import datetime
+
+from api.views import messages_view
 
 
 class LoginTestCases(TestCase):
@@ -114,4 +116,46 @@ class ChannelTestCases(TestCase):
         response = self.client.post(self.delete_url(valid_uuid))
 
         self.assertEqual(response.status_code, 302)
+
+
+class MessagesViewTestCase(TestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+        self.user_uuid = "test-user-id"
+        self.channel_id = "test-channel-id"
+        self.session_data = {
+            'user_uuid': self.user_uuid,
+            'username': 'testuser',
+            'role': 'member'
+        }
+
+    @patch("api.views.supabase_client")
+    def test_messages_view_get_authorized_user(self, mock_supabase_client):
+        mock_supabase_client.table.return_value.select.return_value.eq.return_value.eq.return_value.execute.side_effect = [
+            MagicMock(data=[{'id': 1}]),  # member_check
+            MagicMock(data={'created_by': 'another-user'}),  # created_by_check
+            MagicMock(data=[{'channel_id': self.channel_id}]),  # user_channels_query
+            MagicMock(data=[]),  # admin_channels_query
+            MagicMock(data=[]),  # general_channels_query
+            MagicMock(data=[{'id': self.channel_id, 'name': 'Test Channel', 'created_by': 'another-user'}]),  # channels_query
+            MagicMock(data={'name': 'Test Channel'}),  # channel_query
+            MagicMock(data=[{'id': 1, 'channel_id': self.channel_id, 'user_id': self.user_uuid, 'message': 'Hello there!', 'created_at': '2024-04-10T12:00:00'}]),  # messages
+            MagicMock(data=[{'user_id': self.user_uuid}]),  # user_ids from channel_members
+            MagicMock(data={'created_by': 'another-user'}),  # channel created_by
+            MagicMock(data=[{'id': self.user_uuid, 'username': 'testuser'}]),  # user info
+            MagicMock(data={'username': 'testuser'})  # sender username
+        ]
+
+        request = self.factory.get(f'/api/messages/{self.channel_id}/')
+        request.session = self.session_data
+
+        response = messages_view(request, self.channel_id)
+
+        self.assertEqual(response.status_code, 200)
+
+        self.assertIn(b'Test Channel', response.content)
+
+        self.assertIn(b'Hello there!', response.content)
+
+        self.assertIn(b'testuser', response.content)
 
