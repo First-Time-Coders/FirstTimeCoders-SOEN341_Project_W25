@@ -28,7 +28,6 @@ class LogoutTestCase(TestCase):
         self.assertRedirects(response, reverse('login'))
 
 
-
 class ProfileViewTestCase(TestCase):
     def setUp(self):
         self.client = Client()
@@ -57,11 +56,6 @@ class ProfileViewTestCase(TestCase):
         self.assertContains(response, 'Saf')
         self.assertContains(response, 'Male')
         self.assertContains(response, 'Admin')
-
-
-
-
-
 
 
 class EditProfileTest(TestCase):
@@ -93,3 +87,5 @@ class EditProfileTest(TestCase):
             })
             self.assertEqual(response.status_code, 302)
             self.assertRedirects(response, reverse('profile'))
+
+
