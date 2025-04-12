@@ -22,7 +22,7 @@ This project aims to create a modern platform to ease communications between use
 
 **Full Stack Developper**                        
 * Ileass Bouhout
-* Zineb Bamouh
+* Zineb Bamouh (zinebbamouh #129420707)
   
 ## <a name="tech"></a>Technologies
 This web application uses these technologies and frameworks
