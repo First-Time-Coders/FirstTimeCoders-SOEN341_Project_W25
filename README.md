@@ -17,7 +17,7 @@ This project aims to create a modern platform to ease communications between use
 * Mohammed Safouane Maghni
   
 **Back-end Developper**
-* Julian Valencia
+* Julian Valencia (JulianV123 #169507612)
 * Sarvesh Sai Rajesh
 
 **Full Stack Developper**                        
