@@ -18,7 +18,7 @@ This project aims to create a modern platform to ease communications between use
   
 **Back-end Developper**
 * Julian Valencia (JulianV123 #169507612)
-* Sarvesh Sai Rajesh
+* Sarvesh Sai Rajesh (Hellzonedevil #76613800)
 
 **Full Stack Developper**                        
 * Ileass Bouhout
