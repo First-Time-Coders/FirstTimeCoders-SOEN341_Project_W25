@@ -14,7 +14,7 @@ This project aims to create a modern platform to ease communications between use
 ## <a name="team"></a>Team Members and Roles
 
 **Front-end Developper**
-* Mohammed Safouane Maghni
+* Mohammed Safouane Maghni (Saf1mg ##196467419)
   
 **Back-end Developper**
 * Julian Valencia (JulianV123 #169507612)
