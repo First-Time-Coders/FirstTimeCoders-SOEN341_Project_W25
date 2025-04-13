@@ -25,6 +25,29 @@ import uuid
 
 from api.views import messages_view
 
+class LoginTestCases(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.login_url = reverse('login')
+
+    def test_login_view_success(self):
+        response = self.client.post(self.login_url, {
+            'email': 'julianetmegamanzero@gmail.com',
+            'password': '123456'
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/api/dashboard-admin/')
+
+    def test_login_view_failure(self):
+        response = self.client.post(self.login_url, {
+            'email': 'fake@gmail.com',
+            'password': '123456'
+        })
+
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, '/api/login/')
+
 class LogoutTestCase(TestCase):
     def setUp(self):
         self.client = Client()
@@ -43,33 +66,6 @@ class LogoutTestCase(TestCase):
         self.assertNotIn('role', self.client.session)
 
         self.assertRedirects(response, reverse('login'))
-
-class RegisterTestCases(TestCase):
-    def setUp(self):
-        self.client = Client()
-
-    @patch('api.views.supabase_client')
-    @patch('api.views.bcrypt')
-    def test_register_view_success(self, mock_bcrypt, mock_supabase):
-        mock_bcrypt.gensalt.return_value = b'salt'
-        mock_bcrypt.hashpw.return_value = b'hashedpass'
-        self.register_url = '/api/register/'
-
-        mock_supabase.auth.sign_up.return_value.user.id = 'uuid123'
-        mock_supabase.table.return_value.insert.return_value.execute.return_value = {'data': 'ok'}
-
-        response = self.client.post(self.register_url, {
-            'email': 'testEmail@example.com',
-            'username': 'user',
-            'password': '123456',
-            'first_name': 'Julian',
-            'last_name': 'Valencia',
-            'gender': 'M',
-            'role': 'admin'
-        })
-
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/api/login/')
 
 class RegisterTestCases(TestCase):
     def setUp(self):
@@ -197,34 +193,6 @@ class MessagesViewTestCase(TestCase):
         self.assertIn(b'Hello there!', response.content)
 
         self.assertIn(b'testuser', response.content)
-
-class LogoutTestCase(TestCase):
-    def setUp(self):
-        self.client = Client()
-
-    def test_logout_view_saf1(self):
-        session = self.client.session
-        session['user_uuid'] = '123e4567-e89b-12d3-a456-426614174000'  # ✅ Fixed UUID
-        session['username'] = 'Saf'
-        session['role'] = 'Admin'
-        session.save()
-    @patch('api.views.supabase_client.auth.sign_up')
-    @patch('api.views.messages')
-    def test_register_view_password_length_error(self, mock_messages, mock_sign_up):
-        self.register_url = '/api/register/'
-
-        response = self.client.post(self.register_url, {
-            'email': 'testEmail@example.com',
-            'username': 'user',
-            'password': '123',
-            'first_name': 'Julian',
-            'last_name': 'Valencia',
-            'gender': 'M',
-            'role': 'admin'
-        })
-
-        self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, '/api/register/')
 
 class ChannelTestCases(TestCase):
     def setUp(self):
