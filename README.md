@@ -21,7 +21,7 @@ This project aims to create a modern platform to ease communications between use
 * Sarvesh Sai Rajesh (Hellzonedevil #76613800)
 
 **Full Stack Developper**                        
-* Ileass Bouhout
+* Ileass Bouhout (iileass #180424637)
 * Zineb Bamouh (zinebbamouh #129420707)
   
 ## <a name="tech"></a>Technologies
